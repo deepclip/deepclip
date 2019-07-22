@@ -1,0 +1,15 @@
+VOCAB = ['a', 'c', 'g', 'tu'] # handles DNA and RNA 'silently' when one-hot encoding
+
+FILTER_SIZES = [4, 5, 6, 7, 8]
+MINI_BATCH_SIZE = 24
+GRAD_CLIP = 100
+DROPOUT_CONV = 0.0
+DROPOUT_IN = 0.0
+DROPOUT_OUT = 0.0
+PADDING = 'valid'
+L2 = 0.0
+LSTM_LAYERS = 1
+LSTM_NODES = 10
+LSTM_DROPOUT = 0.1
+NUM_FILTERS = 1
+LEARNING_RATE = 0.0002
