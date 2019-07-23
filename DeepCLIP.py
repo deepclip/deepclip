@@ -1035,16 +1035,10 @@ def main():
         else:
             raise Exception(" Set of binding sequences is empty.")
 
-    if args.runmode != "predict":
+    if args.runmode == "train" or args.runmode == "cv":
         print args.network_file
         print args.predict_function_file
 
-        #seq_list, seq_ids_list = regulate_length(seq_list, seq_ids_list, 20, 75)
-        #bkg_list, bkg_ids_list = regulate_length(bkg_list, bkg_ids_list, 20, 75)
-
-        #seq_list, bkg_list, freq = cal_freq(seq_list, bkg_list, args.encode)
-        #freq = np.array([0.30185849, 0.16230535, 0.20884245, 0.32699371])
-        #print freq
         freq = np.array([1.0, 1.0, 1.0, 1.0])
 
 
@@ -1053,7 +1047,7 @@ def main():
 
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
         max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2
-        print " Max used length:", str(max_length)
+        #print " Max used length:", str(max_length)
 
         print("\n Setting up CNN_BLSTM model")
         print('\n General network info:')
@@ -1136,17 +1130,14 @@ def main():
         if args.test_predictions_file:
             write_test_predictions(test_bkgs+test_seqs, test_bkg_ids+test_ids, y_test, predictions, args.test_predictions_file)
 
-    elif args.runmode == "predict":
-        #network.load_params(args.predict_function_file)
-        #network.save_prediction_function(network.load_network(args.predict_function_file),'srsf1_bes_cv')
-
-        # try loading the network, either from prediction function or from the network itself and then compile prediction function
+    elif args.runmode == "predict" or args.runmode == "predict_long":
+        # try loading the network, either from prediction function, or from the network itself and then compile a prediction function
         if args.predict_function_file:
             print " Loading prediction function from: " + str(args.predict_function_file)
             try:
                 predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.predict_function_file)
             except ValueError:
-                print " Error loading prediction function, trying network instead"
+                print " Error loading prediction function, trying loading as network instead"
                 try:
                     net,freq = network.load_network(args.predict_function_file)
                     options = net.options
@@ -1161,7 +1152,7 @@ def main():
                 predict_fn, outpar = net.compile_prediction_function()
                 output_shape = net.network['l_in'].output_shape
             except ValueError:
-                print " Error loading network, trying prediction function instead."
+                print " Error loading network, trying loading as prediction function instead."
                 try:
                     predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file)
                 except TypeError:
@@ -1171,19 +1162,23 @@ def main():
             print "Couldn't load model!"
             sys.exit()
 
-        #print " The model was build on the overall base frequency: ", freq
-        max_network_length = options["SEQ_SIZE"]
+        max_filter_size = max(options["FILTER_SIZES"])/4
+        max_network_length = int(options["SEQ_SIZE"] - 2*(max_filter_size - 1))
 
-#        if max_length > max_network_length:
-#            raise Exception("Cannot predict on sequences longer than the network was trained on.")
+    if args.runmode == "predict":
+        var_list = []
+        if args.variant_sequences:
+            print " Reading variant sequences from FASTA file:", str(args.variant_sequences)
+            var_list, var_ids_list = fasta.read_fasta_file(args.variant_sequences, 0, max_network_length)
+        max_input_length = max(max(map(len, seq_list)), (max(map(len, var_list)) if len(var_list) > 0 else 0))
+        if max_input_length > max_network_length:
+            raise Exception("Cannot predict on sequences longer than the network was trained on.\n Maximum input length was {} bp, but the network cannot handle sequences longer than {} bp.\n Try using --runmode predict_long instead.".format(str(max_input_length),str(max_network_length)))
 
-        seq_list = encode_input_data(seq_list, max_network_length)
+        seq_list = encode_input_data(seq_list, max_network_length + 2*(max_filter_size - 1))
 
         print " One-hot encoding sequences"
         X_test = onehot_encode(seq_list, freq,  vocab=constants.VOCAB)
 
-        #print X_test[0]
-        #print X_test[1]
 
 #        print " Predicting binding"
         results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
@@ -1192,9 +1187,7 @@ def main():
         weight = results["weights_par"]*inp
 #        print "predicted " + str(len(predictions)) + " sequences."
         if args.variant_sequences:
-            print " Reading variant sequences from FASTA file:", str(args.variant_sequences)
-            var_list, var_ids_list = fasta.read_fasta_file(args.variant_sequences, 0, max_network_length)
-            var_list = encode_input_data(var_list, max_network_length)
+            var_list = encode_input_data(var_list, max_network_length + 2*(max_filter_size - 1))
             X_var = onehot_encode(var_list, freq,  vocab=constants.VOCAB)
             var_results = network.predict_without_network(predict_fn, options, output_shape, X_var, outpar)
             var_predictions = var_results["predictions"]
@@ -1261,14 +1254,6 @@ def main():
 
             FS = [len(seq_list[0]) - filter_sizes[i] / len(options["VOCAB"]) + 1 for i in range(len(filter_sizes))]
 
-            #convolutional_logos(arg, cn, ins, FS,
-            #                    [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
-            #                    args.predict_PFM_file, args.draw_seq_logos)
-
-            #convolutional_logos(arg1, cn1, ins1, FS,
-            #                    [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
-            #                    args.predict_PFM_file+'_best_'+str(number_of_seqs), "PFM_order.txt", args.draw_seq_logos)
-
             convolutional_logos(arg1, cn1, ins1, FS,
                                 [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
                                 args.predict_PFM_file, args.draw_seq_logos)
@@ -1276,101 +1261,44 @@ def main():
 
 
     elif args.runmode == "predict_long":
-        # try loading the network, either from prediction function or from the network itself and then compile prediction function
-        if args.predict_function_file:
-            print " Loading prediction function from: " + str(args.predict_function_file)
-            try:
-                predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.predict_function_file)
-            except ValueError:
-                print " Error loading prediction function, trying network instead"
-                try:
-                    net,freq = network.load_network(args.predict_function_file)
-                    options = net.options
-                    predict_fn, outpar = net.compile_prediction_function()
-                    output_shape = net.network['l_in'].output_shape
-                except TypeError:
-                    print " Error loading network"
-        elif args.network_file:
-            try:
-                net,freq = network.load_network(args.network_file)
-                options = net.options
-                predict_fn, outpar = net.compile_prediction_function()
-                output_shape = net.network['l_in'].output_shape
-            except ValueError:
-                print " Error loading network, trying prediction function instead."
-                try:
-                    predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file)
-                except TypeError:
-                    print " Error loading network"
-
-        if not predict_fn:
-            print " Couldn't load model!"
-            sys.exit()
-
-        #print " The model was build on the overall base frequency: ", freq
-        max_filter_size = max(options["FILTER_SIZES"])/4
-        max_network_length = int(options["SEQ_SIZE"] - 2*(max_filter_size - 1))
-        print " Maximum input length:",str(max_network_length)
-
         prediction_weights = []
         short_seq_list = []
         for seq_i in range(len(seq_list)):
             seq = seq_list[seq_i]
-            #print seq,"\n\n"
             temp_seq_list = []
             if len(seq) > max_network_length:
                 seq = (max_filter_size - 1)*'n' + seq + (max_filter_size - 1)*'n' # pad the seq at the boundaries
                 seq_list[seq_i] = seq
                 for s in range(0, len(seq) - (max_network_length+2*(max_filter_size - 1)-1)):
                     segment = seq[0 + s:max_network_length+2*(max_filter_size - 1) + s].lower()
-                    #print segment
                     temp_seq_list.append(segment)
-                #print "Divided long seq (",str(len(seq)),"bp ) into ",str(len(temp_seq_list)), "segments."
-                #print "Last seq:", str(seq_list[-1]),"\n"
                 temp_seq_list = encode_input_data(temp_seq_list, max_network_length+2*(max_filter_size - 1))
-                print " One-hot encoding sequences"
+                #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
-
                 results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
                 predictions = results["predictions"]
                 inp = np.sum(np.reshape(X_test, (-1, options["SEQ_SIZE"], len(options["VOCAB"]))), axis =-1)
                 weights = results["weights_par"]*inp
                 average_weights = np.zeros(len(seq))
-                #print str(average_weights.shape)
                 b = 0
-                #counters = np.zeros(len(seq))
-                #print "Length of seq:",str(len(seq))
                 for weight in weights:
                     if b == 0:
                         for w in range(max_filter_size - 1,int(len(weight)/2)):
                             average_weights[0+b+w] = weight[w]
-                            #print str(0+b+w), ":", str(seq[0+b+w])
-                            #counters[0+b+w] += 1
                     elif b == len(seq) - (max_network_length+2*(max_filter_size - 1)):
                         for w in range(int(len(weight)/2),len(weight)-(max_filter_size - 1)):
                             average_weights[0+b+w] = weight[w]
-                            #print str(0+b+w), ":", str(seq[0+b+w])
-                            #counters[0+b+w] += 1
                     else:
                         w = int(len(weight)/2) + 1
                         average_weights[0+b+w] = weight[w]
-                        #print str(0+b+w), ":", str(seq[0+b+w])
-                        #counters[0+b+w] += 1
                     b += 1
-                #counters[0] = 1
-                #counters[len(seq)-1] = 1 # last has only 1
-                #for w in range(0, len(counters)):
-                #    average_weights[w] = average_weights[w]/counters[w] # get average score
-                #print " Weights:", str(average_weights)
-                #print str(average_weights.shape)
                 prediction_weights.append(average_weights)
 
             else:
                 temp_seq_list = encode_input_data([seq], max_network_length+2*(max_filter_size - 1))
                 seq_list[seq_i] = temp_seq_list[0]
-                print " One-hot encoding sequences"
+                #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
-
                 results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
                 predictions = results["predictions"]
                 inp = np.sum(np.reshape(X_test, (-1, options["SEQ_SIZE"], len(options["VOCAB"]))), axis =-1)
