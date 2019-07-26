@@ -1,0 +1,9 @@
+biopython
+htseq
+lasagne
+matplotlib
+mkl-service
+numpy
+scikit-learn
+scipy
+theano
