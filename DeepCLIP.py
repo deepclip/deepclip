@@ -22,7 +22,7 @@ sys.setrecursionlimit(500000)  # we sometimes run into Python's default limit of
 
 
 def parse_arguments():
-    version = "0.7.0"
+    version = "1.0.0"
     description = "Constructs a neural network to identify protein binding motifs."
     epilog = "Protein binding sites should be supplied as FASTA files.\n\nAuthors:\n\tAlexander Gr0nning <agroen@imada.sdu.dk>,\n\tThomas Koed Doktor <thomaskd@bmb.sdu.dk>"
 
