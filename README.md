@@ -12,6 +12,12 @@ Summary of DeepCLIP and its functionalities:
 * Binding profiles show whether areas of sequences contain possible binding sites or whether they look like random genomic background.
 * DeepCLIP outperforms current state-of-the-art RNA-binding protein motif discovery tools on curated CLIP datasets.
 
+## Table of contents
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Citation](#citation)
+* [Contributors](#contributors)
+
 ## Requirements
 DeepCLIP was designed to run on Linux flavoured operating systems and while it may run on Windows or FreeBSD flavours such as OS-X we do not actively support this.
 
@@ -49,3 +55,11 @@ $install_folder/DeepCLIP.py
 
 ## Citation
 Link to citable paper about DeepCLIP will be posted soon.
+
+## Contributors
+Main DeepCLIP development
+* Alexander Gulliver Bjørnholt Grønning
+* Thomas Koed Dokor
+
+Additional code
+* Simon Jonas Larsen
