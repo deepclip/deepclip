@@ -18,15 +18,15 @@ def parse_arguments():
     # optional arguments - order kept
     parser.add_argument("--min_length",
                         type=int,
-                        default=0,
+                        default=1,
                         help="Minimum region length.")
     parser.add_argument("--max_length",
                         type=int,
-                        default=50,
+                        default=400,
                         help="Maximum region length.")
     parser.add_argument('-p', "--padding",
                         type=int,
-                        default=10,
+                        default=0,
                         help="Padding added to each region.")
     parser.add_argument('-w', "--width",
                         type=int,
