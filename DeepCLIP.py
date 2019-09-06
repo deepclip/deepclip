@@ -143,13 +143,6 @@ def parse_arguments():
                         default=[0.8,0.1,0.1],
                         help="Ratios to split sequence data into [train, validation, test]")
 
-    parser.add_argument("--encode",
-                        required=False,
-                        type=str,
-                        default='onehot',
-                        choices = ['onehot', 'ratio', 'reciproc'],
-                        help="The system by which the bases are encoded to vectors")
-
     parser.add_argument("--batch_size",
                         required=False,
                         type=int,
@@ -864,58 +857,6 @@ def k_fold_generator_strings(X, y, k_fold):
           X_test, y_test])
     return out
 
-
-def cal_freq(sqs, bkg, encode):
-    """
-    This function calculates the base frequency
-    """
-    a = 0
-    c = 0
-    g = 0
-    u = 0
-
-    lst_sq = [sqs, bkg]
-
-    frs = []
-
-    for ind, sq in enumerate(lst_sq):
-        a = 0.
-        c = 0.
-        g = 0.
-        u = 0.
-        for i in range(len(lst_sq[ind])):
-            a += lst_sq[ind][i].count('a')
-            c += lst_sq[ind][i].count('c')
-            g += lst_sq[ind][i].count('g')
-            u += lst_sq[ind][i].count('u')
-        #frs.append(np.array([a,c,g,u])/np.float(np.sum(np.array([a,c,g,u]))))
-        frs.append(np.array([a,c,g,u]))
-
-    #freq = np.array([a, c, g, u]) / float(a + c + g + u)
-
-    #print "calculating ratio"
-    print "CliP bp frequency: ", frs[0]/np.sum(frs[0])
-    print "background base frequency: ", frs[1]/np.sum(frs[1])
-
-    if encode == 'onehot':
-        freq = frs[0]/frs[0]
-
-    if encode == 'ratio':
-        frs[0] = frs[0]/np.sum(frs[0])
-        frs[1] = frs[1]/np.sum(frs[1])
-        freq = (frs[1]/frs[0]) / np.max(frs[1]/frs[0])
-
-    if encode == 'reciproc':
-        fr = frs[0] + frs[1]
-        fr = fr / np.sum(fr)
-        freq = (1/fr) / np.max(1/fr)
-
-    #freq = abs(1/(frs[0]-frs[1]))
-    #freq = freq / np.max(freq)
-
-    #freq = frs[0]/frs[0]
-
-    return lst_sq[0], lst_sq[1], freq
 
 
 def build_network(args, max_length, filter_sizes):
