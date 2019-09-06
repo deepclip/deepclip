@@ -130,12 +130,6 @@ def parse_arguments():
                         default=None,
                         help="If provided, the padding of intervals around the center")
 
-    parser.add_argument("--early_stopping",
-                        required=False,
-                        type=int,
-                        default=20,
-                        help="If provided, if this many training epochs in a row fail to improve the best AUROC, the training is stopped.")
-
     parser.add_argument("--data_split",
                         required=False,
                         nargs='+',
@@ -182,8 +176,14 @@ def parse_arguments():
     parser.add_argument('-e', "--num_epochs",
                         required=False,
                         type=int,
-                        default=5,
+                        default=10,
                         help="Number of training epochs")
+
+    parser.add_argument("--early_stopping",
+                        required=False,
+                        type=int,
+                        default=10,
+                        help="If provided, if this many training epochs in a row fail to improve the best AUROC, the training is stopped.")
 
     parser.add_argument("--num_filters",
                         required=False,
