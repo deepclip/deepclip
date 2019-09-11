@@ -459,6 +459,18 @@ class Network:
                 cv_results.append(results)
                 auc_cv.append(best_auroc)
                 roc_cv.append(best_roc)
+		## For tracking down the best CV model if the CV training gets interrupted
+                try:
+                    with open("cv_auroc.pkl", "rb") as cvauroc:
+                        tmp_cv_auroc = pickle.load(cvauroc)
+                    tmp_cv_auroc.append(best_auroc)
+		
+		    with open("cv_auroc.pkl", "wb") as cvauroc:
+                        pickle.dump(tmp_cv_auroc, cvauroc, pickle.HIGHEST_PROTOCOL)
+                except:
+                    with open("cv_auroc.pkl", "wb") as cvauroc:
+                        pickle.dump(auc_cv, cvauroc, pickle.HIGHEST_PROTOCOL)
+		
                 with open(self.options['cvfile'] + "_cv_cycle_data.pkl", "wb") as output:
                     pickle.dump([init_params, cf], output, pickle.HIGHEST_PROTOCOL)
                 lasagne.layers.set_all_param_values(self.network['l_sumz'], init_params)
