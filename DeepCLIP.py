@@ -1105,7 +1105,7 @@ def main():
 
         max_filter_size = max(options["FILTER_SIZES"])/4
         max_network_length = int(options["SEQ_SIZE"] - 2*(max_filter_size - 1))
-
+        max_length = int(options["SEQ_SIZE"])
     if args.runmode == "predict":
         var_list = []
         if args.variant_sequences:
@@ -1163,7 +1163,7 @@ def main():
                                 make_single_profile(scores=weight[i], seq=seq_list[i], name=seq_ids_list[i], sigmoid_profile=args.sigmoid_profile, output_name=args.predict_output_file)
 
         if args.predict_PFM_file:
-            temp = np.array(X_test).reshape((-1, max_network_length, 4)) * results["weights_par"].reshape(-1, max_network_length, 1)
+            temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights_par"].reshape(-1, max_length, 1)
             pfmin = np.array(X_test) * temp.reshape(X_test.shape)
             pfmin[pfmin < 0] = 0
             pfmin = pfmin / (pfmin + 0.000000001)
