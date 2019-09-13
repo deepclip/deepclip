@@ -263,7 +263,6 @@ class Network:
     def fit(self, all_inputs, num_epochs=24):
 
 
-
         sys.stdout.flush()
 
         self.compile_training_functions()
@@ -275,15 +274,15 @@ class Network:
 
         if self.options["runmode"] == "cv":
             init_params = lasagne.layers.get_all_param_values(self.network['l_sumz'])
-            print ' Initial parameters have been saved'
+            #print ' Initial parameters have been saved'
             if '_cv_cycle_data.pkl' in self.options['cvfile']:
                 print " Loading previous CV cycle data from ", str(self.options['cvfile'])
                 with open(self.options['cvfile'], "rb") as output:
-                    init_params, cfx = pickle.load(output)
-                    cfx = cfx + 1
-                    self.options['cvfile'] = self.options['cvfile'].replace('_cv_cycle_data.pkl','')
-                    print ' Starting CV from set ' + str(cfx)
-                    lasagne.layers.set_all_param_values(self.network['l_sumz'], init_params)
+                    init_params, auc_cv = pickle.load(output)
+                self.options['cvfile'] = self.options['cvfile'].replace('_cv_cycle_data.pkl','')
+                lasagne.layers.set_all_param_values(self.network['l_sumz'], init_params)
+                cfx = len(auc_cv)
+                print ' Starting CV from set ' + str(cfx+1)
 
         for cf in range(cfx, len(all_inputs)):
             best_val = 0
@@ -459,20 +458,6 @@ class Network:
                 cv_results.append(results)
                 auc_cv.append(best_auroc)
                 roc_cv.append(best_roc)
-		## For tracking down the best CV model if the CV training gets interrupted
-                try:
-                    with open("cv_auroc.pkl", "rb") as cvauroc:
-                        tmp_cv_auroc = pickle.load(cvauroc)
-                    tmp_cv_auroc.append(best_auroc)
-		
-		    with open("cv_auroc.pkl", "wb") as cvauroc:
-                        pickle.dump(tmp_cv_auroc, cvauroc, pickle.HIGHEST_PROTOCOL)
-                except:
-                    with open("cv_auroc.pkl", "wb") as cvauroc:
-                        pickle.dump(auc_cv, cvauroc, pickle.HIGHEST_PROTOCOL)
-		
-                with open(self.options['cvfile'] + "_cv_cycle_data.pkl", "wb") as output:
-                    pickle.dump([init_params, cf], output, pickle.HIGHEST_PROTOCOL)
                 lasagne.layers.set_all_param_values(self.network['l_sumz'], init_params)
                 cv_out = self.options['cvfile'] + "_cv" + str(cf+1) + "-predictions.txt"
                 with open(cv_out, 'w') as outfile:
@@ -489,6 +474,8 @@ class Network:
     		f.close()
 
 
+                with open(self.options['cvfile'] + "_cv_cycle_data.pkl", "wb") as output:
+                    pickle.dump([init_params, auc_cv], output, pickle.HIGHEST_PROTOCOL)
                 print "\n Processing of CV set {} is complete".format(cf + 1), '\n'
 
         if self.options["runmode"] == "cv":

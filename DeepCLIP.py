@@ -1286,15 +1286,11 @@ def main():
         print " Best AUROC:", str(auc_values[argmax(auc_values)]), "from CV set", str(argmax(auc_values)+1)
         print " All AUROC scores:", str(auc_values)
         print " Saving overall best network."
-        
-        with open("cv_auroc.pkl", "rb") as cvauroc:
-            tmp_cv_auroc = pickle.load(cvauroc)
-        #best_cv = argmax(auc_values)+1
-        best_cv = argmax(tmp_cv_auroc)+1
-        
+        best_cv = argmax(auc_values)+1
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
+        print " CV runmode completed."
 
 
 if __name__ == "__main__":
