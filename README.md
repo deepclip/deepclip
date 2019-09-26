@@ -268,7 +268,6 @@ for (i in 1:length(data$sequence)) {
   p <- p +
     geom_line(aes(color=group), size=0.8) +
     scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
-    ggtitle("TDP43 sensitive pseudoexons, 5'ss") +
     theme_bw() +
     theme(
       legend.title = element_blank(),
