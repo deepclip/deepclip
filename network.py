@@ -435,7 +435,7 @@ class Network:
                         #best_network_data = self.options["file_name"] + "_slim_auroc"
                         #self.save_slim_network(outfile=best_network_data, par=par)
 
-                        print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
+                        #print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
                         print " New parameters have been saved"
                         #if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
                         #    breaker += 1
@@ -451,7 +451,7 @@ class Network:
                             print "Breaking this training early because {} epochs in a row produced validation loss that were higher than the previous best loss score.".format(self.options["early_stopping"])
                             break
 
-
+                print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
                 new_auroc = auroc
                 if new_auroc > best_auroc:
                     best_auroc = new_auroc
@@ -483,6 +483,7 @@ class Network:
                         if early_stopping >= self.options["early_stopping"]:
                             print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
                             break
+                print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
 
             print("\n Best validation accuracy:\t{:.6f} % at epoch: {}".format(best_val, best_epoch_acc))
             print(" Best validation AUROC:\t\t{:.4f} at epoch: {}".format(best_auroc, best_epoch))

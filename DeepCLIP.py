@@ -266,12 +266,12 @@ def parse_arguments():
                         action="store_true",
                         help="Draw binding profiles.")
 
-    parser.add_argument("--par_selection",
+    parser.add_argument("--performance_selection",
                         required=False,
                         choices=["auroc", "loss"],
                         type=str,
                         default="auroc",
-                        help='Choose whether the best parameters should be based on highest AUROC or lowest loss.')
+                        help='Use this measure to select the best performing model [auroc, loss]. Default: auc')
 
     return parser.parse_args()
 
@@ -868,7 +868,7 @@ def k_fold_generator_strings(X, y, k_fold):
 
 def build_network(args, max_length, filter_sizes):
     return network.Network(
-        par_selection=args.par_selection,
+        par_selection=args.performance_selection,
         auc_thr=args.auc_thr,
         cvfile=args.network_file,
         runmode=args.runmode,
