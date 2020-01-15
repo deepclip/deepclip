@@ -287,8 +287,10 @@ class Network:
         for cf in range(cfx, len(all_inputs)):
             best_val = 0
             best_auroc = 0
+            best_loss = 10000000
             best_epoch = 0
             best_epoch_acc = 0
+            best_epoch_loss = 0
             breaker = 0
             train_all = []
             test_all = []
@@ -416,35 +418,75 @@ class Network:
 
                 print("\n Highest accuracy so far:\t{:.6f} from epoch {}".format(best_val, best_epoch_acc))
 
-                # extracting the best parameters based on highest AUROC
+                loss = val_err / val_batches
+                new_loss = loss
+                if new_loss < best_loss:
+                    best_loss = new_loss
+                    best_epoch_loss = epoch + 1
+                    if self.options["par_selection"] == "loss":
+                        # extracting the best parameters based on lowest loss
+                        #new_loss = loss
+                        #if new_loss < best_loss:
+                        #    best_loss = new_loss
+                        #    best_epoch_loss = epoch + 1
+                        score = [['ep number:', epoch + 1], ['Acc:', best_val], ['Err:', val_err / val_batches], loss]
+                        best_params = lasagne.layers.get_all_param_values(self.network['l_sumz'])
+                        best_roc = _
+                        #best_network_data = self.options["file_name"] + "_slim_auroc"
+                        #self.save_slim_network(outfile=best_network_data, par=par)
+
+                        print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
+                        print " New parameters have been saved"
+                        #if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
+                        #    breaker += 1
+                        #    if breaker >= 2:
+                        #        print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
+                        #        break
+                        if loss > best_loss:
+                            early_stopping += 1
+                        else:
+                            early_stopping = 0
+                        previous_loss = loss
+                        if early_stopping >= self.options["early_stopping"]:
+                            print "Breaking this training early because {} epochs in a row produced validation loss that were higher than the previous best loss score.".format(self.options["early_stopping"])
+                            break
+
+
                 new_auroc = auroc
                 if new_auroc > best_auroc:
                     best_auroc = new_auroc
                     best_epoch = epoch + 1
-                    score = [['ep number:', epoch + 1], ['Acc:', best_val], ['Err:', val_err / val_batches], auroc]
-                    best_params = lasagne.layers.get_all_param_values(self.network['l_sumz'])
-                    best_roc = _
-                    #best_network_data = self.options["file_name"] + "_slim_auroc"
-                    #self.save_slim_network(outfile=best_network_data, par=par)
+                    if self.options["par_selection"] == "auroc":
+                        # extracting the best parameters based on highest AUROC
+                        #new_auroc = auroc
+                        #if new_auroc > best_auroc:
+                        #    best_auroc = new_auroc
+                        #    best_epoch = epoch + 1
+                        score = [['ep number:', epoch + 1], ['Acc:', best_val], ['Err:', val_err / val_batches], auroc]
+                        best_params = lasagne.layers.get_all_param_values(self.network['l_sumz'])
+                        best_roc = _
+                        #best_network_data = self.options["file_name"] + "_slim_auroc"
+                        #self.save_slim_network(outfile=best_network_data, par=par)
 
-                print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
-
-                if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
-                    breaker += 1
-                    if breaker >= 2:
-                        print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
-                        break
-                if auroc < best_auroc:
-                    early_stopping += 1
-                else:
-                    early_stopping = 0
-                previous_auroc = auroc
-                if early_stopping >= self.options["early_stopping"]:
-                        print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
-                        break
+                        print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
+                        print " New parameters have been saved"
+                        if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
+                            breaker += 1
+                            if breaker >= 2:
+                                print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
+                                break
+                        if auroc < best_auroc:
+                            early_stopping += 1
+                        else:
+                            early_stopping = 0
+                        previous_auroc = auroc
+                        if early_stopping >= self.options["early_stopping"]:
+                            print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
+                            break
 
             print("\n Best validation accuracy:\t{:.6f} % at epoch: {}".format(best_val, best_epoch_acc))
             print(" Best validation AUROC:\t\t{:.4f} at epoch: {}".format(best_auroc, best_epoch))
+            print(" Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
 
 
             sys.stdout.flush()
