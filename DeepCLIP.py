@@ -1291,10 +1291,19 @@ def main():
 
         net.build_model()
         n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
-        print " Best AUROC:", str(auc_values[argmax(auc_values)]), "from CV set", str(argmax(auc_values)+1)
-        print " All AUROC scores:", str(auc_values)
-        print " Saving overall best network."
-        best_cv = argmax(auc_values)+1
+
+        if args.performance_selection == "loss":
+            print " Lowest loss:", str(auc_values[np.argmin(auc_values)]), "from CV set", str(np.argmin(auc_values)+1)
+            print " All loss scores:", str(auc_values)
+            print " Saving overall best network."
+            best_cv = np.argmin(auc_values)+1
+
+        if args.performance_selection == "auroc":
+            print " Best AUROC:", str(auc_values[argmax(auc_values)]), "from CV set", str(argmax(auc_values)+1)
+            print " All AUROC scores:", str(auc_values)
+            print " Saving overall best network."
+            best_cv = argmax(auc_values)+1
+
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)

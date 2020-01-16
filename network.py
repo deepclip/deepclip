@@ -416,7 +416,7 @@ class Network:
                     #best_network_data = self.options["file_name"] + "_slim_acc"
                     #self.save_slim_network(outfile=best_network_data, par=par)
 
-                print("\n Highest accuracy so far:\t{:.6f} from epoch {}".format(best_val, best_epoch_acc))
+                #print("\n Highest accuracy so far:\t{:.6f} from epoch {}".format(best_val, best_epoch_acc))
 
                 loss = val_err / val_batches
                 new_loss = loss
@@ -436,7 +436,7 @@ class Network:
                         #self.save_slim_network(outfile=best_network_data, par=par)
 
                         #print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
-                        print " New parameters have been saved"
+                        print " New parameters have been saved based on loss"
                         #if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
                         #    breaker += 1
                         #    if breaker >= 2:
@@ -451,7 +451,8 @@ class Network:
                             print "Breaking this training early because {} epochs in a row produced validation loss that were higher than the previous best loss score.".format(self.options["early_stopping"])
                             break
 
-                print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
+                print("\n Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
+                print(" Highest accuracy so far:\t{:.6f} from epoch {}".format(best_val, best_epoch_acc))
                 new_auroc = auroc
                 if new_auroc > best_auroc:
                     best_auroc = new_auroc
@@ -469,7 +470,7 @@ class Network:
                         #self.save_slim_network(outfile=best_network_data, par=par)
 
                         print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
-                        print " New parameters have been saved"
+                        print " New parameters have been saved based on auroc"
                         if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
                             breaker += 1
                             if breaker >= 2:
@@ -485,9 +486,10 @@ class Network:
                             break
                 print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
 
-            print("\n Best validation accuracy:\t{:.6f} % at epoch: {}".format(best_val, best_epoch_acc))
+            print("\n Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
+            print(" Best validation accuracy:\t{:.6f} % at epoch: {}".format(best_val, best_epoch_acc))
             print(" Best validation AUROC:\t\t{:.4f} at epoch: {}".format(best_auroc, best_epoch))
-            print(" Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
+            #print(" Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
 
 
             sys.stdout.flush()
@@ -497,10 +499,14 @@ class Network:
 		print self.network['output_params']
                 predict_fn, outpar = self.compile_prediction_function()
                 save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), [1,1,1,1])
-                results = predict(self.network, self.options, predict_fn, X_test, self.network['output_params'])
+                results = predict(self.network, self.options, predict_fn, X_test, self.network['output_params'])        
                 cv_results.append(results)
-                auc_cv.append(best_auroc)
-                roc_cv.append(best_roc)
+                if self.options["par_selection"] == "auroc":
+                    auc_cv.append(best_auroc)
+                    roc_cv.append(best_roc)
+                if self.options["par_selection"] == "loss":                    
+                    auc_cv.append(best_loss)
+                    roc_cv.append(best_roc)
                 lasagne.layers.set_all_param_values(self.network['l_sumz'], init_params)
                 cv_out = self.options['cvfile'] + "_cv" + str(cf+1) + "-predictions.txt"
                 with open(cv_out, 'w') as outfile:
