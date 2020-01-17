@@ -615,9 +615,10 @@ def save_network(network, options, outfile, freq):
 def load_network(infile):
     with open(infile, "rb") as input:
         params, options, freq = pickle.load(input)
+        params32 = [p.astype(np.float32) for p in params]
         net = Network(**options)
         net.build_model()
-        lasagne.layers.set_all_param_values(net.network['l_out'], params)
+        lasagne.layers.set_all_param_values(net.network['l_out'], params32)
     return net, freq
 
 
