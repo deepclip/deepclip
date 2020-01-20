@@ -272,6 +272,10 @@ def parse_arguments():
                         type=str,
                         default="auroc",
                         help='Use this measure to select the best performing model [auroc, loss]. Default: auc')
+    parser.add_argument("--export_test_sets",
+                        action='store_true',
+                        help="Enables exporting of test datasets when running in CV runmode. Any 'n' bases in the input are removed.")
+
 
     return parser.parse_args()
 
@@ -1320,14 +1324,15 @@ def main():
         all_strings2 = k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=cross_fold)
         for qqb in range(len(all_inputs)):
             all_inputs[qqb] += all_strings[qqb]
-        for i in range(len(all_strings2)):
-            bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[i]
-            with open("cv" + str(i+1) + "-test.pos.fa", "w") as fa_out:
-                for j in range(len(te_sqs)):
-                    fa_out.write(">" + str(te_ids[j]) + "\n" + str(te_sqs[j]).replace('n', '').replace('N', '') + "\n")
-            with open("cv" + str(i+1) + "-test.neg.fa", "w") as fa_out:
-                for j in range(len(bkg_te_sqs)):
-                    fa_out.write(">" + str(bkg_te_ids[j]) + "\n" + str(bkg_te_sqs[j]).replace('n', '').replace('N', '') + "\n")
+        if args.export_test_sets:
+            for i in range(len(all_strings2)):
+                bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[i]
+                with open("cv" + str(i+1) + "-test.pos.fa", "w") as fa_out:
+                    for j in range(len(te_sqs)):
+                        fa_out.write(">" + str(te_ids[j]) + "\n" + str(te_sqs[j]).replace('n', '').replace('N', '') + "\n")
+                with open("cv" + str(i+1) + "-test.neg.fa", "w") as fa_out:
+                    for j in range(len(bkg_te_sqs)):
+                        fa_out.write(">" + str(bkg_te_ids[j]) + "\n" + str(bkg_te_sqs[j]).replace('n', '').replace('N', '') + "\n")
 
         net.build_model()
         n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
