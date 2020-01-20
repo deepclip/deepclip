@@ -814,7 +814,7 @@ def argmax(iterable):
     return max(enumerate(iterable), key=lambda x: x[1])[0]
 
 
-def k_fold_generator(X, y, k_fold):
+def k_fold_generator(X, y, k_fold=10):
     freq = np.array([1.0, 1.0, 1.0, 1.0])
     out = []
     subset_sizeX = int(len(X) / k_fold)
@@ -840,7 +840,7 @@ def k_fold_generator(X, y, k_fold):
     return out
 
 
-def k_fold_generator_strings(X, y, k_fold):
+def k_fold_generator_strings(X, y, k_fold=10):
     freq = np.array([1.0, 1.0, 1.0, 1.0])
     out = []
     subset_sizeX = int(len(X) / k_fold)
@@ -864,6 +864,37 @@ def k_fold_generator_strings(X, y, k_fold):
           X_test, y_test])
     return out
 
+def k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=10):
+    freq = np.array([1.0, 1.0, 1.0, 1.0])
+    out = []
+    subset_sizeX = int(len(train_bkgs) / k_fold)
+    subset_sizeY = int(len(train_seqs) / k_fold)
+    for k in range(k_fold):
+        X_train_sqs = train_bkgs[:k * subset_sizeX] + train_bkgs[(k + 1) * subset_sizeX:]
+        X_train_ids = train_bkg_ids[:k * subset_sizeX] + train_bkg_ids[(k + 1) * subset_sizeX:]
+        X_valid_sqs = train_bkgs[k * subset_sizeX:][:subset_sizeX]
+        X_valid_ids = train_bkg_ids[k * subset_sizeX:][:subset_sizeX]
+        y_train_sqs = train_seqs[:k * subset_sizeY] + train_seqs[(k + 1) * subset_sizeY:]
+        y_train_ids = train_ids[:k * subset_sizeY] + train_ids[(k + 1) * subset_sizeY:]
+        y_valid_sqs = train_seqs[k * subset_sizeY:][:subset_sizeY]
+        y_valid_ids = train_ids[k * subset_sizeY:][:subset_sizeY]
+        subset_size2X = int(len(X_train_sqs) / (k_fold-1))
+        subset_size2Y = int(len(y_train_sqs) / (k_fold-1))
+        if k==(k_fold-1):
+            k=0
+        X_test_sqs = X_train_sqs[k * subset_size2X:][:subset_size2X]
+        X_test_ids = X_train_ids[k * subset_size2X:][:subset_size2X]
+        y_test_sqs = y_train_sqs[k * subset_size2Y:][:subset_size2Y]
+        y_test_ids = y_train_ids[k * subset_size2Y:][:subset_size2Y]
+        X_train_sqs = X_train_sqs[:k * subset_size2X] + X_train_sqs[(k + 1) * subset_size2X:]
+        X_train_ids = X_train_ids[:k * subset_size2X] + X_train_ids[(k + 1) * subset_size2X:]
+        y_train_sqs = y_train_sqs[:k * subset_size2Y] + y_train_sqs[(k + 1) * subset_size2Y:]
+        y_train_ids = y_train_sqs[:k * subset_size2Y] + y_train_ids[(k + 1) * subset_size2Y:]
+
+        out.append([X_train_ids, X_train_sqs, y_train_ids, y_train_sqs,
+          X_valid_ids, X_valid_sqs, y_valid_ids, y_valid_sqs,
+          X_test_ids, X_test_sqs, y_test_ids, y_test_sqs])
+    return out
 
 
 def build_network(args, max_length, filter_sizes):
@@ -1285,9 +1316,18 @@ def main():
 
         print " One-hot encoding sequences"
         all_inputs = k_fold_generator(train_bkgs, train_seqs, k_fold=cross_fold)
-        all_strings = k_fold_generator_strings(train_seqs, train_ids, k_fold=cross_fold)
+        all_strings = k_fold_generator_strings(train_bkgs, train_bkg_ids, k_fold=cross_fold)
+        all_strings2 = k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=cross_fold)
         for qqb in range(len(all_inputs)):
             all_inputs[qqb] += all_strings[qqb]
+        for i in range(len(all_strings2)):
+            bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[i]
+            with open("cv" + str(i+1) + "-test.pos.fa", "w") as fa_out:
+                for j in range(len(te_sqs)):
+                    fa_out.write(">" + str(te_ids[j]) + "\n" + str(te_sqs[j]).replace('n', '').replace('N', '') + "\n")
+            with open("cv" + str(i+1) + "-test.neg.fa", "w") as fa_out:
+                for j in range(len(bkg_te_sqs)):
+                    fa_out.write(">" + str(bkg_te_ids[j]) + "\n" + str(bkg_te_sqs[j]).replace('n', '').replace('N', '') + "\n")
 
         net.build_model()
         n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
