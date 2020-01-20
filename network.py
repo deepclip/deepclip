@@ -434,7 +434,6 @@ class Network:
                         best_roc = _
                         #best_network_data = self.options["file_name"] + "_slim_auroc"
                         #self.save_slim_network(outfile=best_network_data, par=par)
-
                         #print(" Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
                         print " New parameters have been saved based on loss"
                         #if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
@@ -442,14 +441,15 @@ class Network:
                         #    if breaker >= 2:
                         #        print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
                         #        break
-                        if loss > best_loss:
-                            early_stopping += 1
-                        else:
-                            early_stopping = 0
+                if self.options["par_selection"] == "loss":
+                    if new_loss > best_loss:
+                        early_stopping += 1
+                    else:
+                        early_stopping = 0
                         previous_loss = loss
-                        if early_stopping >= self.options["early_stopping"]:
-                            print "Breaking this training early because {} epochs in a row produced validation loss that were higher than the previous best loss score.".format(self.options["early_stopping"])
-                            break
+                    if early_stopping >= self.options["early_stopping"]:
+                        print "Breaking this training early because {} epochs in a row produced validation loss that were higher than the previous best loss score.".format(self.options["early_stopping"])
+                        break
 
                 print("\n Lowest loss so far:\t\t{:.4f} from epoch {}".format(best_loss, best_epoch_loss))
                 print(" Highest accuracy so far:\t{:.6f} from epoch {}".format(best_val, best_epoch_acc))
@@ -468,22 +468,22 @@ class Network:
                         best_roc = _
                         #best_network_data = self.options["file_name"] + "_slim_auroc"
                         #self.save_slim_network(outfile=best_network_data, par=par)
-
                         print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
                         print " New parameters have been saved based on auroc"
-                        if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
-                            breaker += 1
-                            if breaker >= 2:
-                                print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
-                                break
-                        if auroc < best_auroc:
-                            early_stopping += 1
-                        else:
-                            early_stopping = 0
+                if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
+                    breaker += 1
+                    if breaker >= 2:
+                        print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
+                        break
+                if self.options["par_selection"] == "auroc":
+                    if auroc < best_auroc:
+                        early_stopping += 1
+                    else:
+                        early_stopping = 0
                         previous_auroc = auroc
-                        if early_stopping >= self.options["early_stopping"]:
-                            print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
-                            break
+                    if early_stopping >= self.options["early_stopping"]:
+                        print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
+                        break
                 print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
 
             print("\n Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
