@@ -240,6 +240,12 @@ def parse_arguments():
                         default="",
                         help="Write sequence logo data to JSON file.")
 
+    parser.add_argument("--PFM_on_half",
+                        required=False,
+                        type=bool,
+                        default=False,
+                        help="Write sequence logo data to JSON file based top 50 % sequences with highest prediction.")
+
     parser.add_argument("--balanced_input",
                         action='store_true',
                         help="Force the number of negative and positive sequences to be equal.")
@@ -1229,11 +1235,19 @@ def main():
             arg1 = []
             cn1 = []
             ins1 = []
-            number_of_seqs = int(min([1000, len(pred)]))
-            for i in range(number_of_seqs):
-                arg1.append(arg[pred[i][1]])
-                cn1.append(cn[pred[i][1]])
-                ins1.append(ins[pred[i][1]])
+            if args.PFM_on_half == True:
+                number_of_seqs = int(len(pred)/2)
+                for i in range(number_of_seqs):
+                    arg1.append(arg[pred[i][1]])
+                    cn1.append(cn[pred[i][1]])
+                    ins1.append(ins[pred[i][1]])
+
+            if args.PFM_on_half != True:
+                number_of_seqs = int(min([1000, len(pred)]))
+                for i in range(number_of_seqs):
+                    arg1.append(arg[pred[i][1]])
+                    cn1.append(cn[pred[i][1]])
+                    ins1.append(ins[pred[i][1]])
 
 
             FS = [len(seq_list[0]) - filter_sizes[i] / len(options["VOCAB"]) + 1 for i in range(len(filter_sizes))]
