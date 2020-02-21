@@ -282,6 +282,11 @@ def parse_arguments():
                         action='store_true',
                         help="Enables exporting of test datasets when running in CV runmode. Any 'n' bases in the input are removed.")
 
+    parser.add_argument("--no_extra_padding",
+                        required=False,
+                        default=False,
+                        action="store_true",
+                        help="No sequence padding will occur.")
 
     return parser.parse_args()
 
@@ -979,6 +984,12 @@ def main():
     import cPickle as pickle
     from roc import get_auroc_data
     from making_CNN_PFMs import convolutional_logos
+
+    if args.no_extra_padding:
+        nep = 0
+    if not args.no_extra_padding:
+        nep = 1
+
     if args.random_seed:
         random.seed(args.random_seed)
         np.random.seed(args.random_seed)
@@ -1036,7 +1047,7 @@ def main():
         print " Max input length:", str(max_input_length)
 
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
-        max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2
+        max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep
         #print " Max used length:", str(max_length)
 
         print("\n Setting up CNN_BLSTM model")
@@ -1164,7 +1175,11 @@ def main():
         if max_input_length > max_network_length:
             raise Exception("Cannot predict on sequences longer than the network was trained on.\n Maximum input length was {} bp, but the network cannot handle sequences longer than {} bp.\n Try using --runmode predict_long instead.".format(str(max_input_length),str(max_network_length)))
 
-        seq_list = encode_input_data(seq_list, max_network_length + 2*(max_filter_size - 1))
+        print seq_list[0]
+        print len(seq_list[0])
+        seq_list = encode_input_data(seq_list, max_network_length + 2*(max_filter_size - 1)*nep)
+        print seq_list[0]
+        print len(seq_list[0])
 
         print " One-hot encoding sequences"
         X_test = onehot_encode(seq_list, freq,  vocab=constants.VOCAB)
@@ -1177,7 +1192,7 @@ def main():
         weight = results["weights_par"]*inp
 #        print "predicted " + str(len(predictions)) + " sequences."
         if args.variant_sequences:
-            var_list = encode_input_data(var_list, max_network_length + 2*(max_filter_size - 1))
+            var_list = encode_input_data(var_list, max_network_length + 2*(max_filter_size - 1)*nep)
             X_var = onehot_encode(var_list, freq,  vocab=constants.VOCAB)
             var_results = network.predict_without_network(predict_fn, options, output_shape, X_var, outpar)
             var_predictions = var_results["predictions"]
@@ -1270,7 +1285,7 @@ def main():
                 for s in range(0, len(seq) - (max_network_length+2*(max_filter_size - 1)-1)):
                     segment = seq[0 + s:max_network_length+2*(max_filter_size - 1) + s].lower()
                     temp_seq_list.append(segment)
-                temp_seq_list = encode_input_data(temp_seq_list, max_network_length+2*(max_filter_size - 1))
+                temp_seq_list = encode_input_data(temp_seq_list, max_network_length+2*(max_filter_size - 1)*nep)
                 #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
                 results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
@@ -1293,7 +1308,7 @@ def main():
                 prediction_weights.append(average_weights)
 
             else:
-                temp_seq_list = encode_input_data([seq], max_network_length+2*(max_filter_size - 1))
+                temp_seq_list = encode_input_data([seq], max_network_length+2*(max_filter_size - 1)*nep)
                 seq_list[seq_i] = temp_seq_list[0]
                 #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
