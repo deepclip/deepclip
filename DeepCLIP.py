@@ -1349,10 +1349,10 @@ def main():
 
         print " One-hot encoding sequences"
         all_inputs = k_fold_generator(train_bkgs, train_seqs, k_fold=cross_fold)
-        all_strings = k_fold_generator_strings(train_bkgs, train_bkg_ids, k_fold=cross_fold)
+        #all_strings = k_fold_generator_strings(train_bkgs, train_bkg_ids, k_fold=cross_fold)
         all_strings2 = k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=cross_fold)
-        for qqb in range(len(all_inputs)):
-            all_inputs[qqb] += all_strings[qqb]
+        #for qqb in range(len(all_inputs)):
+        #    all_inputs[qqb] += all_strings[qqb]
         if args.export_test_sets:
             for i in range(len(all_strings2)):
                 bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[i]

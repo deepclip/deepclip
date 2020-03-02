@@ -297,7 +297,8 @@ class Network:
             cm_all = []
 
 	    if self.options["runmode"] == "cv":
-		train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[cf]
+		#train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[cf]
+		train, val, test = all_inputs[cf]
             	X_train, y_train = train
             	X_val, y_val = val
             	X_test, y_test = test
