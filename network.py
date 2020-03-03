@@ -515,13 +515,13 @@ class Network:
                         line = str(int(y_test[i])) + " " + str(float(results["predictions"][i])) + "\n"
                         outfile.write(line)
 
-		f = open(cv_out[:-4]+'_id_seq_pred.txt', "w")
-    		for qm in range(len(te_sqs)):
-        	    start = next(j for j in range(len(te_sqs[qm])) if te_sqs[qm][j] != "n")
-        	    end = next(j for j in range(len(te_sqs[qm]),0,-1) if te_sqs[qm][j-1] != "n")
-        	    f.write(str(te_ids[qm])+'\t'+te_sqs[qm][start:end]+'\t'+str(float(results["predictions"][qm])))
-        	    f.write("\n")
-    		f.close()
+#		f = open(cv_out[:-4]+'_id_seq_pred.txt', "w")
+#    		for qm in range(len(te_sqs)):
+#        	    start = next(j for j in range(len(te_sqs[qm])) if te_sqs[qm][j] != "n")
+#        	    end = next(j for j in range(len(te_sqs[qm]),0,-1) if te_sqs[qm][j-1] != "n")
+#        	    f.write(str(te_ids[qm])+'\t'+te_sqs[qm][start:end]+'\t'+str(float(results["predictions"][qm])))
+#        	    f.write("\n")
+#    		f.close()
 
 
                 with open(self.options['cvfile'] + "_cv_cycle_data.pkl", "wb") as output:
