@@ -9,8 +9,8 @@ def read_fasta_file(path, min_length=1, max_length=100):
     seqs = []
     names = []
     for s in seqgen:
-        seq = str(s.seq).lower()
-        if 'n' not in seq and len(seq) >= min_length and len(seq) <= max_length:
+        seq = str(s.seq)
+        if 'n' not in seq.lower() and len(seq) >= min_length and len(seq) <= max_length:
             seqs.append(seq)
             names.append(s.id)
     return seqs, names

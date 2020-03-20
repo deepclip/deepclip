@@ -970,7 +970,7 @@ def read_fasta_file_and_prepare_data(fasta_file):
                     id = line.rstrip()[1:]
                     seq = ""
             else:
-                seq += line.rstrip().lower()
+                seq += line.rstrip()
         # end of file, append the last fasta line
         ids.append(id)
         seq_data.append(seq)
