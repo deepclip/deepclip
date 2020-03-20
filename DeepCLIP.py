@@ -7,6 +7,7 @@ import json
 import random
 import math
 import string
+import time
 import numpy as np
 
 import matplotlib
@@ -708,14 +709,23 @@ def write_test_predictions(seq, ids, y, predictions, output_file):
 def write_predict_output(seq, ids, predictions, weights, output_file):
     pred_results = []
     for i in range(len(seq)):
-        start = next(j for j in range(len(seq[i])) if seq[i][j] != "n")
-        end = next(j for j in range(len(seq[i]),0,-1) if seq[i][j-1] != "n")
-        pred_results.append({
-            'sequence': str(seq[i][start:end]),
-            'id': ids[i],
-            'score': float(predictions[i]),
-            'weights': weights[i][start:end]
-            })
+        try:
+            if seq[i][0]!="n":
+                start = 0
+            else:
+                start = next(j for j in range(len(seq[i])) if seq[i][j] != "n")
+            if seq[i][-1]!="n":
+                end = len(seq[i])
+            else:
+                end = next(j for j in range(len(seq[i]),0,-1) if seq[i][j-1] != "n")
+            pred_results.append({
+                'sequence': str(seq[i][start:end]),
+                'id': ids[i],
+                'score': float(predictions[i]),
+                'weights': weights[i][start:end]
+                })
+        except StopIteration: # happens if there's a sequence with all 'n' characters
+                    pass
     json_obj = {"predictions" : pred_results}
     with open(output_file, "w") as f:
         f.write(json.dumps(json_obj))
@@ -1165,8 +1175,11 @@ def main():
 
         max_filter_size = max(options["FILTER_SIZES"])/4
         max_network_length = int(options["SEQ_SIZE"] - 2*(max_filter_size - 1))
+        if args.no_extra_padding:
+            max_network_length = int(options["SEQ_SIZE"])
         max_length = int(options["SEQ_SIZE"])
     if args.runmode == "predict":
+        start_time = time.time()
         var_list = []
         if args.variant_sequences:
             print " Reading variant sequences from FASTA file:", str(args.variant_sequences)
@@ -1271,6 +1284,8 @@ def main():
                                 [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
                                 args.predict_PFM_file, args.draw_seq_logos)
             print "PFMs based on the " + str(number_of_seqs) + " best scoring sequences have been made"
+        ctime = time.time() - start_time
+        print("Entire prediction took {:.3f}s".format(ctime))
 
 
     elif args.runmode == "predict_long":
