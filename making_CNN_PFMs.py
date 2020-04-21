@@ -82,7 +82,7 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
                 #pfm_R_json_obj[pfm_name] = list([list(k) for k in lg])
 
                 lg_raw = lg_raw.T
-                info_per_bp = np.sum(2 + np.sum(lg_raw * np.log2(lg_raw+pfm_add), axis=-1, keepdims = True))/len(lg_raw)
+                info_per_bp = np.sum(2 + np.sum(lg_raw/np.sum(lg_raw+pfm_add,axis=0) * np.log2(lg_raw/np.sum(lg_raw+pfm_add,axis=0)), axis=-1, keepdims = True))/len(lg_raw)
 
                 json_obj["logos"].append({
                     'size': FILTER_SIZES[i] / len(VOCAB),
