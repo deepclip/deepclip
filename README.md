@@ -16,6 +16,7 @@ Summary of DeepCLIP and its functionalities:
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Models](#Models)
 * [Citation](#citation)
 * [Contributors](#contributors)
 ---
@@ -396,6 +397,9 @@ for (i in 1:length(data$sequence)) {
 }
 
 ```
+---
+## Models
+In [deepclip/models](https://github.com/deepclip/models) you can find all models used in the article presenting DeepCLIP (see below).
 
 ---
 ## Citation
