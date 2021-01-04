@@ -70,9 +70,12 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
     json_obj = {}
     json_obj["logos"] = []
     pfm_add = 0.000000001
+    print(" Filter\tLength\tName\tInformation-score-per-bp")
+    filter_num = 0
     for i in range(len(FILTER_SIZES)):
         for ii in range(FILTERS[i]):
-            pfm_name = "PFM_" + str(FILTER_SIZES[i]/4)+ "_" + str(ii)
+            filter_num += 1
+            pfm_name = "PFM_" + str(FILTER_SIZES[i]/len(VOCAB))+ "_" + str(ii)
             lg_raw = (ttt[i][ii].T) / np.sum((ttt[i][ii] + pfm_add).T, axis=0)
             #print lg_raw.shape
             if np.sum(lg_raw) > 0:
@@ -97,9 +100,7 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
                 if draw_seq_logos:
                     ddd = printing_seq_logo(lg, tttt[i][ii], name= path + '_filter_'+str(FILTER_SIZES[i] / len(VOCAB))+'bp_number'+str(ii+1)+'_score-')
 
-                print str(i+1),pfm_name,str(info_per_bp)
-            else:
-                print str(i+1),pfm_name
+                print(" #{}\t{}\t{}\t{:.6f}".format(filter_num,FILTER_SIZES[i]/len(VOCAB),pfm_name,info_per_bp))
     with open(pfm_json_outfile, 'w') as f:
         f.write(json.dumps(json_obj))
 
