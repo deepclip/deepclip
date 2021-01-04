@@ -25,187 +25,191 @@ sys.setrecursionlimit(500000)  # we sometimes run into Python's default limit of
 def parse_arguments():
     version = "1.0.0"
     description = "Constructs a neural network to identify protein binding motifs."
-    epilog = "Protein binding sites should be supplied as FASTA files.\n\nAuthors:\n\tAlexander Gr0nning <agroen@imada.sdu.dk>,\n\tThomas Koed Doktor <thomaskd@bmb.sdu.dk>"
+    epilog = "Authors:\n\tAlexander G Bjørnholt Grønning <alexander.groenning@sund.ku.dk>,\n\tThomas Koed Doktor <thomaskd@bmb.sdu.dk>"
 
     parser = argparse.ArgumentParser(description=description, version=version, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required arguments')
+    input_group = parser.add_argument_group("Input file options")
+    bed_input_group = parser.add_argument_group("BED-file specific input options")
+    network = parser.add_argument_group("Network options")
+    training = parser.add_argument_group("Training options")
+    output_group = parser.add_argument_group("Output options")
 
-    parser.add_argument("--runmode",
+    required.add_argument("--runmode",
                         required=True,
-                        choices=["train", "predict", "predict_long", "cv"],
+                        choices=["cv", "train", "predict", "predict_long"],
                         type=str,
-                        default="train",
-                        help='Operation to perform. Use \'train\' to train a neural network. Use \'predict\' to predict binding affinity for a set of sequences.')
+                        help='Operation to perform. Use \'train\' or \'cv\' to train a neural network. Use \'predict\' or \'predict_long\' to predict binding affinity for a set of sequences.')
 
-    parser.add_argument('-n', "--network_file",
+    network.add_argument('-n', "--network_file",
                         required=False,
                         type=str,
                         default=None,
                         help="Path to network parameters file")
 
-    parser.add_argument('-P', "--predict_function_file",
+    network.add_argument('-P', "--predict_function_file",
                         required=False,
                         type=str,
                         default=None,
                         help="Path to prediction function file")
 
-    parser.add_argument("--sequences",
+    input_group.add_argument("--sequences",
                         required=False,
                         type=str,
                         default=None,
-                        help="FASTA file containing binding sequences.")
+                        help="FASTA file containing binding sequences. In training and cv mode, a BED file can also be supplied.")
 
-    parser.add_argument("--background_sequences",
+    input_group.add_argument("--background_sequences",
                         required=False,
                         type=str,
                         default=None,
-                        help="FASTA file containing background (non-binding) sequences.")
+                        help="BED or FASTA file containing background (non-binding) sites or sequences.")
 
-    parser.add_argument("--write_sequences",
+    output_group.add_argument("--write_sequences",
                         required=False,
                         type=str,
                         default=None,
                         help="Write sequences used for training to FASTA file.")
 
-    parser.add_argument("--write_background_sequences",
+    output_group.add_argument("--write_background_sequences",
                         required=False,
                         type=str,
                         default=None,
                         help="Write background sequences used for training to FASTA file.")
 
-    parser.add_argument("--variant_sequences",
+    input_group.add_argument("--variant_sequences",
                         required=False,
                         type=str,
                         default=None,
                         help="FASTA file containing variant sequences to be predicted and compared to the reference sequence(s).")
 
-    parser.add_argument("--force_bed",
+    bed_input_group.add_argument("--force_bed",
                         action='store_true',
                         help="Force sequence file to considered a BED file regardless of file ending.")
 
-    parser.add_argument("--background_shuffle",
+    input_group.add_argument("--background_shuffle",
                         action="store_true",
                         help="Produce background sequences by shuffling input sequences"
                         )
 
-    parser.add_argument("--genome_file",
+    bed_input_group.add_argument("--genome_file",
                         required=False,
                         type=str,
                         default=None,
                         help="FASTA file for extracting sequences from BED file.")
 
-    parser.add_argument("--gtf_file",
+    bed_input_group.add_argument("--gtf_file",
                         required=False,
                         type=str,
                         default=None,
                         help="GTF file for extrating sequences from BED file.")
 
-    parser.add_argument("--min_length",
+    input_group.add_argument("--min_length",
                         required=False,
                         type=int,
                         default=1,
                         help="Minimum sequence length.")
 
-    parser.add_argument("--max_length",
+    input_group.add_argument("--max_length",
                         required=False,
                         type=int,
                         default=400,
                         help="Maximum sequence length.")
 
-    parser.add_argument("--bed_width",
+    input_group.add_argument("--bed_width",
                         required=False,
                         type=int,
                         default=0,
                         help="Fixed sequences from BED file to this length."
                         )
 
-    parser.add_argument("--bed_padding",
+    input_group.add_argument("--bed_padding",
                         required=False,
                         type=int,
                         default=0,
                         help="Pad sequences from BED file with this number of bases.")
 
-    parser.add_argument('-p', "--padding",
+    input_group.add_argument('-p', "--padding",
                         required=False,
                         type=int,
                         default=None,
                         help="If provided, the padding of intervals around the center")
 
-    parser.add_argument("--data_split",
+    training.add_argument("--data_split",
                         required=False,
                         nargs='+',
                         type=float,
                         default=[0.8,0.1,0.1],
                         help="Ratios to split sequence data into [train, validation, test]")
 
-    parser.add_argument("--batch_size",
+    training.add_argument("--batch_size",
                         required=False,
                         type=int,
                         default=constants.MINI_BATCH_SIZE,
                         help="The batch size used in training")
 
-    parser.add_argument("--lstm_layers",
+    network.add_argument("--lstm_layers",
                         required=False,
                         type=int,
                         default=constants.LSTM_LAYERS,
                         help="The number of bidirectional LSTM layers. The final number of LSTM layers will be twice this number.")
 
-    parser.add_argument("--lstm_nodes",
+    network.add_argument("--lstm_nodes",
                         required=False,
                         type=int,
                         default=constants.LSTM_NODES,
                         help="The number of nodes in each LSTM layer")
 
-    parser.add_argument("--lstm_dropout",
+    network.add_argument("--lstm_dropout",
                         required=False,
                         type=float,
                         default=constants.LSTM_DROPOUT,
                         help="LSTM dropout ratio")
 
-    parser.add_argument("--dropout_in",
+    network.add_argument("--dropout_in",
                         required=False,
                         type=float,
                         default=constants.DROPOUT_IN,
                         help="Input layer dropout ratio")
 
-    parser.add_argument("--dropout_out",
+    network.add_argument("--dropout_out",
                         required=False,
                         type=float,
                         default=constants.DROPOUT_OUT,
                         help="Output layer dropout ratio")
 
-    parser.add_argument('-e', "--num_epochs",
+    training.add_argument('-e', "--num_epochs",
                         required=False,
                         type=int,
                         default=10,
                         help="Number of training epochs")
 
-    parser.add_argument("--early_stopping",
+    training.add_argument("--early_stopping",
                         required=False,
                         type=int,
                         default=10,
                         help="If provided, if this many training epochs in a row fail to improve the best AUROC, the training is stopped.")
 
-    parser.add_argument("--num_filters",
+    network.add_argument("--num_filters",
                         required=False,
                         type=int,
                         default=constants.NUM_FILTERS,
                         help="Number of filters per convolution")
 
-    parser.add_argument("--filter_sizes",
+    network.add_argument("--filter_sizes",
                         required=False,
                         nargs='+',
                         type=int,
                         default=constants.FILTER_SIZES,
                         help="Convolutional filter sizes in bp.")
 
-    parser.add_argument("--learning_rate",
+    network.add_argument("--learning_rate",
                         required=False,
                         type=float,
                         default=constants.LEARNING_RATE,
                         help="Learning rate.")
 
-    parser.add_argument("--l2",
+    network.add_argument("--l2",
                         required=False,
                         type=float,
                         default=constants.L2,
@@ -217,73 +221,73 @@ def parse_arguments():
                         default=1234,
                         help="Set random seed")
 
-    parser.add_argument("--test_output_file",
+    output_group.add_argument("--test_output_file",
                         required=False,
                         type=str,
                         default="",
-                        help="Write results of test to JSON file.")
+                        help="Write AUROC results of test to JSON file.")
 
-    parser.add_argument("--test_predictions_file",
+    output_group.add_argument("--test_predictions_file",
                         required=False,
                         type=str,
                         default="",
-                        help="Write prediction results of test sequences to file.")
+                        help="Write prediction results of test sequences to TSV file.")
 
-    parser.add_argument("--predict_output_file",
+    output_group.add_argument("--predict_output_file",
                         required=False,
                         type=str,
                         default="",
-                        help="Write results of prediction to JSON file.")
+                        help="Write results of prediction to JSON or TSV file.")
 
-    parser.add_argument("--predict_PFM_file",
+    output_group.add_argument("--predict_PFM_file",
                         required=False,
                         type=str,
                         default="",
                         help="Write sequence logo data to JSON file.")
 
-    parser.add_argument("--PFM_on_half",
+    output_group.add_argument("--PFM_on_half",
                         required=False,
                         type=bool,
                         default=False,
-                        help="Write sequence logo data to JSON file based top 50 % sequences with highest prediction.")
+                        help="Write sequence logo data to JSON file based top 50-percent sequences with highest prediction.")
 
-    parser.add_argument("--balanced_input",
+    input_group.add_argument("--balanced_input",
                         action='store_true',
                         help="Force the number of negative and positive sequences to be equal.")
 
-    parser.add_argument("--auc_thr",
+    training.add_argument("--auc_thr",
                         required=False,
                         type=float,
                         default=0.999,
                         help="Will stop a run if 2 epochs produced either training or validation AUROCs above the float value")
 
-    parser.add_argument("--make_diff",
+    output_group.add_argument("--make_diff",
                         action='store_true',
                         help="Prints the delta binding profiles.")
 
-    parser.add_argument("--sigmoid_profile",
+    output_group.add_argument("--sigmoid_profile",
                         action='store_true',
                         help="Plots the sigmoidal profile values instead of 'raw' values.")
 
-    parser.add_argument("--draw_seq_logos",
+    output_group.add_argument("--draw_seq_logos",
                         action="store_true",
                         help="Draw convolutional sequence logos.")
 
-    parser.add_argument("--draw_profiles",
+    output_group.add_argument("--draw_profiles",
                         action="store_true",
                         help="Draw binding profiles.")
 
-    parser.add_argument("--performance_selection",
+    training.add_argument("--performance_selection",
                         required=False,
                         choices=["auroc", "loss"],
                         type=str,
                         default="auroc",
                         help='Use this measure to select the best performing model [auroc, loss]. Default: auroc')
-    parser.add_argument("--export_test_sets",
+    output_group.add_argument("--export_test_sets",
                         action='store_true',
                         help="Enables exporting of test datasets when running in CV runmode. Any 'n' bases in the input are removed.")
 
-    parser.add_argument("--no_extra_padding",
+    input_group.add_argument("--no_extra_padding",
                         required=False,
                         default=False,
                         action="store_true",
@@ -1383,23 +1387,23 @@ def main():
         print("\n Building and training network")
         net = build_network(args, max_length, filter_sizes)
         net.build_model()
-#        n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
-#
-#       if args.performance_selection == "loss":
-#            print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
-#            print(" All loss scores: {}".format(auc_values))
-#            best_cv = np.argmin(auc_values)+1
-#
-#        if args.performance_selection == "auroc":
-#            print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
-#            print(" All AUROC scores: {}".format(auc_values))
-#            best_cv = argmax(auc_values)+1
+        n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
 
-#        print("\n Saving overall best network.")
-#        net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
-#        network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
-#        network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
-        best_cv = 5
+        if args.performance_selection == "loss":
+            print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
+            print(" All loss scores: {}".format(auc_values))
+            best_cv = np.argmin(auc_values)+1
+
+        if args.performance_selection == "auroc":
+            print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
+            print(" All AUROC scores: {}".format(auc_values))
+            best_cv = argmax(auc_values)+1
+
+        print("\n Saving overall best network.")
+        net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
+        network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
+        network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
+
         if args.test_output_file or args.predict_PFM_file or args.test_predictions_file:
             print("\n Loading best model's prediction function")
             predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
@@ -1433,9 +1437,6 @@ def main():
             ins = pfmin
 
             pred = []
-            #for pr in range(len(predictions)):
-            #   pred.append( [predictions[pr][0], arg[pr], cn[pr], ins[pr]] )
-
             for pr in range(len(predictions)):
                 pred.append( [predictions[pr][0], pr] )
 
