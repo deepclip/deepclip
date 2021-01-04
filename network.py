@@ -199,6 +199,7 @@ class Network:
         for param in all_params:
             print '', param, param.get_value().shape
         print "-" * 40
+        print("\n")
         sys.stdout.flush()
 
         # train cost
@@ -222,14 +223,14 @@ class Network:
         updates = lasagne.updates.adam(cost_train, all_params, learning_rate=self.options["ETA"], beta1=0.9,
                                        beta2=0.999, epsilon=1e-08)
         print "done"
-        print " Making Theano training function - slow step...",
+        print " Making training function - slow step...",
         sys.stdout.flush()
         start_time = time.time()
         self.train_fn = theano.function([self.sym_input, self.sym_target], [cost_train, train_acc, train_preds],
                                         updates=updates, allow_input_downcast=True)
         ctime = time.time() - start_time
         print("finished in {:.3f}s".format(ctime))
-        print " Making Theano validation function - slow step...",
+        print " Making validation function - slow step...",
         sys.stdout.flush()
         start_time = time.time()
         self.val_fn = theano.function([self.sym_input, self.sym_target], [cost_val, val_acc, val_preds, eq_val],
@@ -493,7 +494,8 @@ class Network:
             if self.options["runmode"] == "cv":
 		#print(self.network['output_params'])
                 predict_fn, outpar = self.compile_prediction_function()
-                save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), [1,1,1,1])
+                freq = np.array([1.0, 1.0, 1.0, 1.0])
+                save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), freq)
                 results = predict(self.network, self.options, predict_fn, X_test, self.network['output_params'])        
                 cv_results.append(results)
                 if self.options["par_selection"] == "auroc":

@@ -1064,13 +1064,14 @@ def main():
         print('\n General training settings:')
         print(" Number of training epochs: {}".format(args.num_epochs))
         print(" Stopping early after {} epochs without model improvement".format(args.early_stopping))
+        print(" Batch size: {}".format(args.batch_size))
         print(" Random seed: {}".format(args.random_seed))
         print(" Learning rate: {}".format(args.learning_rate))
         print(" L2: {}".format(args.l2))
         sys.stdout.flush()
 
     if args.runmode == "train":
-        print(" Running in 'train' runmode\n")
+        print("\n Running in 'train' runmode\n")
         if len(bkg_list) == 0:
             raise Exception("No background sequences provided for training.")
 
@@ -1123,7 +1124,7 @@ def main():
         # returns a dict with different results, but always
         # at least "predictions" (classifier) and "profiles" (binding profiles)
         predictions = results["predictions"]
-        auroc, roc = get_auroc_data(y_test, predictions, segments=100)
+        auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
         print("\n Test AUROC: {:.4f}".format(auroc))
         if args.predict_PFM_file:
             temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights"].reshape(-1, max_length, 1)
@@ -1335,14 +1336,14 @@ def main():
                     temp_weights.append(w)
                 prediction_weights.append(temp_weights)
 
-        print " Completed long predictions on",str(len(seq_list)),"input sequences."
+        print(" Completed long predictions on {} input sequences.".format(len(seq_list)))
         if args.predict_output_file:
             full_weights = get_sequence_logo_data(seq_list, prediction_weights)
             write_long_predict_output(seq_list, seq_ids_list, full_weights, args.predict_output_file)
 
 
     elif args.runmode == "cv":
-        print(" Running in 'CV' runmode")
+        print("\n Running in 'CV' runmode")
         if len(bkg_list) == 0:
             raise Exception("No background sequences provided for cross-validation.")
         print(" Equalizing sequences")
@@ -1382,21 +1383,20 @@ def main():
 
         if args.performance_selection == "loss":
             print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
-            print(" All loss scores: {}".format(auc_values))
-            print(" Saving overall best network.")
+            print(" All loss scores: {:.4f}".format(auc_values))
             best_cv = np.argmin(auc_values)+1
 
         if args.performance_selection == "auroc":
             print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
-            print(" All AUROC scores: {}".format(auc_values))
-            print(" Saving overall best network.")
+            print(" All AUROC scores: {:.4f}".format(auc_values))
             best_cv = argmax(auc_values)+1
 
+        print("\n Saving overall best network.")
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
         if args.test_output_file or args.predict_PFM_file or args.test_predictions_file:
-            print(" Loading best model's prediction function to predict on the held out test set.")
+            print("\n Loading best model's prediction function to predict on the held out test set.")
             predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
             print(" Predicting using best model")
             train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[best_auroc_cv-1]
