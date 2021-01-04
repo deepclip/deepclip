@@ -1396,6 +1396,18 @@ def main():
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
+        if args.test_output_file:
+            print " Loading best model's prediction function to compute AUROC on held out test set."
+            predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
+            print " Predicting using best model"
+            train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[best_auroc_cv-1]
+            X_test, y_test = test
+            results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
+            predictions = results["predictions"]
+            print " Computing AUROC curved based on",str(len(predictions)),"predictions."
+            auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
+            write_test_output(auroc, roc, args.test_output_file)
+            print " Completed AUROC calculation."
         print " CV runmode completed."
 
 
