@@ -278,7 +278,7 @@ def parse_arguments():
                         choices=["auroc", "loss"],
                         type=str,
                         default="auroc",
-                        help='Use this measure to select the best performing model [auroc, loss]. Default: auc')
+                        help='Use this measure to select the best performing model [auroc, loss]. Default: auroc')
     parser.add_argument("--export_test_sets",
                         action='store_true',
                         help="Enables exporting of test datasets when running in CV runmode. Any 'n' bases in the input are removed.")
@@ -1023,20 +1023,20 @@ def main():
 
         bkg_ids_list = ["bg_"+s for s in seq_ids_list]
     else:
-        print " Reading sequences from FASTA file:",str(args.sequences)
+        print(" Reading sequences from FASTA file: {}".format(args.sequences))
         if args.runmode == "predict":
             seq_list, seq_ids_list = read_fasta_file_and_prepare_data(args.sequences)
         elif args.runmode == "predict_long":
             seq_list, seq_ids_list = fasta.read_long_fasta_file(args.sequences)
         else:
             seq_list, seq_ids_list = fasta.read_fasta_file(args.sequences, args.min_length, args.max_length)
-            print len(seq_list), seq_list[:10]
+            #print len(seq_list), seq_list[:10]
 
     if args.background_sequences:
-        print " Reading background sequences"
+        print(" Reading background sequences from FASTA file: {}".format(args.background_sequences))
         bkg_list, bkg_ids_list = fasta.read_fasta_file(args.background_sequences, args.min_length, args.max_length)
     elif args.background_shuffle:
-        print " Making background by shuffling input bases"
+        print(" Making background by shuffling input bases")
         bkg_list = shuffle_all_seqs(seq_list)
         bkg_ids_list = ["bg"+str(i) for i in range(len(bkg_list))]
 
@@ -1049,41 +1049,38 @@ def main():
     if args.runmode == "train" or args.runmode == "cv":
         #print args.network_file
         #print args.predict_function_file
-
         freq = np.array([1.0, 1.0, 1.0, 1.0])
-
-
         max_input_length = max(max(map(len, seq_list)), (max(map(len, bkg_list)) if len(bkg_list) > 0 else 0))
-        print " Max input length:", str(max_input_length)
-
+        print(" Maximum input length: {}".format(max_input_length))
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
         max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep
         #print " Max used length:", str(max_length)
-
-        print("\n Setting up CNN_BLSTM model")
-        print('\n General network info:')
-        print ' Number of epochs: {}'.format(args.num_epochs)
-        print ' Stopping early after {} epochs without model improvement.'.format(args.early_stopping)
+        print('\n General model settings:')
+        print(" Setting up CNN_BLSTM model")
         print(' Class 0: background')
         print(' Class 1: positive binding sites')
-        print " Filter sizes: " + ", ".join(str(i) for i in filter_sizes)
-        print " Number of BLSTM nodes: " + str(args.lstm_nodes)
+        print " CNN filter sizes: " + ", ".join(str(i) for i in filter_sizes)
+        print(" Number of BLSTM nodes: {}".format(args.lstm_nodes))
+        print('\n General training settings:')
+        print(" Number of training epochs: {}".format(args.num_epochs))
+        print(" Stopping early after {} epochs without model improvement".format(args.early_stopping))
+        print(" Random seed: {}".format(args.random_seed))
+        print(" Learning rate: {}".format(args.learning_rate))
+        print(" L2: {}".format(args.l2))
         sys.stdout.flush()
 
     if args.runmode == "train":
+        print(" Running in 'train' runmode\n")
         if len(bkg_list) == 0:
             raise Exception("No background sequences provided for training.")
 
-        print " Building network"
-        net = build_network(args, max_length, filter_sizes)
-
-        print " Equalizing sequences"
+        print(" Equalizing sequences")
         encode_input_data(seq_list, max_length)
         encode_input_data(bkg_list, max_length)
 
         if args.balanced_input:
             set_size = min([len(seq_list), len(bkg_list)])
-            print " Setting set size to " + str(set_size)
+            print(" Setting set size to {}".format(set_size))
             seq_list = seq_list[:set_size]
             seq_ids_list = seq_ids_list[:set_size]
             bkg_list = bkg_list[:set_size]
@@ -1097,7 +1094,7 @@ def main():
         (train_seqs, train_ids), (val_seqs, val_ids), (test_seqs, test_ids) = split_data(seq_list, seq_ids_list, args.data_split)
         (train_bkgs, train_bkg_ids), (val_bkgs, val_bkg_ids), (test_bkgs, test_bkg_ids) = split_data(bkg_list, bkg_ids_list, args.data_split)
 
-        print " One-hot encoding sequences"
+        print(" One-hot encoding sequences")
         all_inputs = [[onehot_binary(train_bkgs, train_seqs, freq, vocab=constants.VOCAB),
             onehot_binary(val_bkgs, val_seqs, freq, vocab=constants.VOCAB),
             onehot_binary(test_bkgs, test_seqs, freq, vocab=constants.VOCAB)]]
@@ -1106,26 +1103,28 @@ def main():
 
         #print X_test.shape, X_test[0], X_test[1]
 
+        print("\n Building and training network")
+        net = build_network(args, max_length, filter_sizes)
         net.fit(all_inputs, num_epochs=args.num_epochs)
 
         if args.network_file:
-            print " Saving network to file"
+            print(" Saving network to file")
             network.save_network(net.network, net.options, args.network_file, freq)
         if args.predict_function_file:
-            print " Saving prediction function to file"
+            print(" Saving prediction function to file")
             network.save_prediction_function(net, args.predict_function_file, freq)
 
-        print "\n Testing network"
+        print("\n Testing network")
         predict_fn, outpar = net.compile_prediction_function()
         results = network.predict(net, net.options, predict_fn, X_test, outpar)
 
-        print " Overall max score of test set: ", np.max(abs(np.array(results["weights"])))
+        print(" Overall max score of test set: {}".format(np.max(abs(np.array(results["weights"])))))
 
         # returns a dict with different results, but always
         # at least "predictions" (classifier) and "profiles" (binding profiles)
         predictions = results["predictions"]
         auroc, roc = get_auroc_data(y_test, predictions, segments=100)
-        print "\n Test AUROC: " + str(auroc)
+        print("\n Test AUROC: {:.4f}".format(auroc))
         if args.predict_PFM_file:
             temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights"].reshape(-1, max_length, 1)
             pfmin = np.array(X_test) * temp.reshape(X_test.shape)
@@ -1144,11 +1143,11 @@ def main():
     elif args.runmode == "predict" or args.runmode == "predict_long":
         # try loading the network, either from prediction function, or from the network itself and then compile a prediction function
         if args.predict_function_file:
-            print " Loading prediction function from: " + str(args.predict_function_file)
+            print(" Loading prediction function from: {}".format(args.predict_function_file))
             try:
                 predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.predict_function_file)
             except ValueError:
-                print " Error loading prediction function, trying loading as network instead"
+                print(" Error loading prediction function, trying loading as network instead")
                 try:
                     net,freq = network.load_network(args.predict_function_file)
                     options = net.options
@@ -1163,14 +1162,14 @@ def main():
                 predict_fn, outpar = net.compile_prediction_function()
                 output_shape = net.network['l_in'].output_shape
             except ValueError:
-                print " Error loading network, trying loading as prediction function instead."
+                print(" Error loading network, trying loading as prediction function instead.")
                 try:
                     predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file)
                 except TypeError:
-                    print " Error loading network"
+                    print(" Error loading network")
 
         if not predict_fn:
-            print "Couldn't load model!"
+            print("Couldn't load model!")
             sys.exit()
 
         max_filter_size = max(options["FILTER_SIZES"])/4
@@ -1182,7 +1181,7 @@ def main():
         start_time = time.time()
         var_list = []
         if args.variant_sequences:
-            print " Reading variant sequences from FASTA file:", str(args.variant_sequences)
+            print(" Reading variant sequences from FASTA file: {}".format(args.variant_sequences))
             var_list, var_ids_list = fasta.read_fasta_file(args.variant_sequences, 0, max_network_length)
         max_input_length = max(max(map(len, seq_list)), (max(map(len, var_list)) if len(var_list) > 0 else 0))
         if max_input_length > max_network_length:
@@ -1194,7 +1193,7 @@ def main():
         #print seq_list[0]
         #print len(seq_list[0])
 
-        print " One-hot encoding sequences"
+        print(" One-hot encoding sequences")
         X_test = onehot_encode(seq_list, freq,  vocab=constants.VOCAB)
 
 
@@ -1283,9 +1282,9 @@ def main():
             convolutional_logos(arg1, cn1, ins1, FS,
                                 [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
                                 args.predict_PFM_file, args.draw_seq_logos)
-            print "PFMs based on the " + str(number_of_seqs) + " best scoring sequences have been made"
+            print " PFMs based on the " + str(number_of_seqs) + " best scoring sequences have been made"
         ctime = time.time() - start_time
-        print("Entire prediction took {:.3f}s".format(ctime))
+        print(" Entire prediction took {:.3f}s".format(ctime))
 
 
     elif args.runmode == "predict_long":
@@ -1343,26 +1342,25 @@ def main():
 
 
     elif args.runmode == "cv":
+        print(" Running in 'CV' runmode")
         if len(bkg_list) == 0:
             raise Exception("No background sequences provided for cross-validation.")
-        print " Equalizing sequences"
+        print(" Equalizing sequences")
         encode_input_data(seq_list, max_length)
         encode_input_data(bkg_list, max_length)
         if args.balanced_input:
             set_size = min([len(seq_list), len(bkg_list)])
-            print " Setting set size to " + str(set_size)
+            print(" Setting set size to {}".format(set_size))
             seq_list = seq_list[:set_size]
             seq_ids_list = seq_ids_list[:set_size]
             bkg_list = bkg_list[:set_size]
             bkg_ids_list = bkg_ids_list[:set_size]
 
-        print " Building network"
-        net = build_network(args, max_length, filter_sizes)
         cross_fold = 10 # set to 10-fold cross-validation
         train_seqs, train_ids = seq_list, seq_ids_list
         train_bkgs, train_bkg_ids = bkg_list, bkg_ids_list
 
-        print " One-hot encoding sequences"
+        print(" One-hot encoding sequences")
         all_inputs = k_fold_generator(train_bkgs, train_seqs, k_fold=cross_fold)
         #all_strings = k_fold_generator_strings(train_bkgs, train_bkg_ids, k_fold=cross_fold)
         all_strings2 = k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=cross_fold)
@@ -1378,39 +1376,40 @@ def main():
                     for j in range(len(bkg_te_sqs)):
                         fa_out.write(">" + str(bkg_te_ids[j]) + "\n" + str(bkg_te_sqs[j]).replace('n', '').replace('N', '') + "\n")
 
-        net.build_model()
+        print("\n Building and training network")
+        net = build_network(args, max_length, filter_sizes)
         n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
 
         if args.performance_selection == "loss":
-            print " Lowest loss:", str(auc_values[np.argmin(auc_values)]), "from CV set", str(np.argmin(auc_values)+1)
-            print " All loss scores:", str(auc_values)
-            print " Saving overall best network."
+            print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
+            print(" All loss scores: {}".format(auc_values))
+            print(" Saving overall best network.")
             best_cv = np.argmin(auc_values)+1
 
         if args.performance_selection == "auroc":
-            print " Best AUROC:", str(auc_values[argmax(auc_values)]), "from CV set", str(argmax(auc_values)+1)
-            print " All AUROC scores:", str(auc_values)
-            print " Saving overall best network."
+            print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
+            print(" All AUROC scores: {}".format(auc_values))
+            print(" Saving overall best network.")
             best_cv = argmax(auc_values)+1
 
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
         if args.test_output_file or args.predict_PFM_file or args.test_predictions_file:
-            print " Loading best model's prediction function to predict on the held out test set."
+            print(" Loading best model's prediction function to predict on the held out test set.")
             predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
-            print " Predicting using best model"
+            print(" Predicting using best model")
             train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[best_auroc_cv-1]
             X_test, y_test = test
             results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
             predictions = results["predictions"]
             if args.test_output_file:
-                print " Computing AUROC curve based on",str(len(predictions)),"predictions."
+                print(" Computing AUROC curve based on {} predictions.".format(len(predictions)))
                 auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
                 write_test_output(auroc, roc, args.test_output_file)
-                print " Completed AUROC calculation."
+                print(" Completed AUROC calculation.")
             if args.predict_PFM_file:
-                print " Computing PFM based on",str(len(predictions)),"predictions."
+                print(" Computing PFM based on {} predictions.".format(len(predictions)))
                 temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights"].reshape(-1, max_length, 1)
                 pfmin = np.array(X_test) * temp.reshape(X_test.shape)
                 pfmin[pfmin < 0] = 0

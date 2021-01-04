@@ -97,8 +97,8 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
                 if draw_seq_logos:
                     ddd = printing_seq_logo(lg, tttt[i][ii], name= path + '_filter_'+str(FILTER_SIZES[i] / len(VOCAB))+'bp_number'+str(ii+1)+'_score-')
 
-                print pfm_name,str(info_per_bp)
+                print " - Filter",pfm_name,str(info_per_bp)
     with open(pfm_json_outfile, 'w') as f:
         f.write(json.dumps(json_obj))
 
-    print '\n PFMs have been made'
+    #print '\n PFMs have been made'

@@ -195,11 +195,6 @@ class Network:
         total_params = sum([p.get_value().size for p in all_params])
         print " Total Model Parameters:", total_params
         print " Trainable Model Parameters"
-
-	all_params = lasagne.layers.get_all_params(self.network['l_profile'], trainable=True) #l_out
-	total_params = sum([p.get_value().size for p in all_params])
-        print " Total Model Parameters:", total_params
-
 	print "-" * 40
         for param in all_params:
             print '', param, param.get_value().shape
@@ -339,7 +334,7 @@ class Network:
                 train_preds = []
 
                 if len(all_inputs) > 1:
-                    print("\n Epoch {} of {}".format(epoch + 1, num_epochs))
+                    print("\n Epoch {} of {}, CV {} of {}".format(epoch + 1, num_epochs, cf + 1, len(all_inputs)))
                     print ' Training...'
 
                 if len(all_inputs) == 1:
@@ -355,7 +350,7 @@ class Network:
                     train_targets.extend(targets)
                     train_preds.extend(protr)
                 trtime = time.time() - start_time
-                print(" Training took {:.3f}s".format(trtime))
+                print(" Epoch training time was {:.3f}s".format(trtime))
 
                 auroctr, _ = roc.get_auroc_data(train_targets, train_preds)
                 train_all.append([train_err / train_batches, train_acc / train_batches * 100, auroctr])
@@ -389,8 +384,8 @@ class Network:
                             class1_prob.append(pro[i])
                             class1_seq.append(inputs[i])
 
-                print(" Validating took {:.3f}s".format(time.time() - start_time - trtime))
-                print(" Total epoch runtime was {:.3f}s".format(time.time() - start_time))
+                val_time = time.time()
+                print(" Epoch validation time was {:.3f}s".format(val_time - start_time - trtime))
                 sys.stdout.flush()
 
                 auroctr, _ = roc.get_auroc_data(train_targets, train_preds)
@@ -474,7 +469,7 @@ class Network:
                 if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
                     breaker += 1
                     if breaker >= 2:
-                        print 'Breaking this run because 20 epochs produced either training or validation AUROC above {}'.format(self.options["auc_thr"])
+                        print(" Breaking this run because 20 epochs produced either training or validation AUROC above {}".format(self.options["auc_thr"]))
                         break
                 if self.options["par_selection"] == "auroc":
                     if auroc < best_auroc:
@@ -483,21 +478,20 @@ class Network:
                         early_stopping = 0
                         previous_auroc = auroc
                     if early_stopping >= self.options["early_stopping"]:
-                        print "Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"])
+                        print(" Breaking this training early because {} epochs in a row produced validation AUROC that didn't exceed the previous best AUROC score.".format(self.options["early_stopping"]))
                         break
                 print(" Highest AUROC so far:\t\t{:.4f} from epoch {}".format(best_auroc, best_epoch))
+                print(" Total epoch runtime was {:.3f}s".format(time.time() - start_time))
+                sys.stdout.flush()
 
             print("\n Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
             print(" Best validation accuracy:\t{:.6f} % at epoch: {}".format(best_val, best_epoch_acc))
             print(" Best validation AUROC:\t\t{:.4f} at epoch: {}".format(best_auroc, best_epoch))
-            #print(" Best validation loss:\t\t{:.4f} at epoch: {}".format(best_loss, best_epoch_loss))
-
-
             sys.stdout.flush()
             lasagne.layers.set_all_param_values(self.network['l_sumz'], best_params)
 
             if self.options["runmode"] == "cv":
-		print self.network['output_params']
+		#print(self.network['output_params'])
                 predict_fn, outpar = self.compile_prediction_function()
                 save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), [1,1,1,1])
                 results = predict(self.network, self.options, predict_fn, X_test, self.network['output_params'])        
