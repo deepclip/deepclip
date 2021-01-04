@@ -1396,18 +1396,35 @@ def main():
         net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
         network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
         network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
-        if args.test_output_file:
-            print " Loading best model's prediction function to compute AUROC on held out test set."
+        if args.test_output_file or args.predict_PFM_file or args.test_predictions_file:
+            print " Loading best model's prediction function to predict on the held out test set."
             predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
             print " Predicting using best model"
             train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[best_auroc_cv-1]
             X_test, y_test = test
             results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
             predictions = results["predictions"]
-            print " Computing AUROC curved based on",str(len(predictions)),"predictions."
-            auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
-            write_test_output(auroc, roc, args.test_output_file)
-            print " Completed AUROC calculation."
+            if args.test_output_file:
+                print " Computing AUROC curve based on",str(len(predictions)),"predictions."
+                auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
+                write_test_output(auroc, roc, args.test_output_file)
+                print " Completed AUROC calculation."
+            if args.predict_PFM_file:
+                print " Computing PFM based on",str(len(predictions)),"predictions."
+                temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights"].reshape(-1, max_length, 1)
+                pfmin = np.array(X_test) * temp.reshape(X_test.shape)
+                pfmin[pfmin < 0] = 0
+                pfmin = pfmin / (pfmin + 0.000000001)
+                FS = [len(seq_list[0]) - filter_sizes[i] / len(constants.VOCAB) + 1 for i in range(len(filter_sizes))]
+                convolutional_logos(results["argmax"], results["cnscore"], pfmin, FS,
+                                        [args.num_filters] * len(filter_sizes), filter_sizes, constants.VOCAB,
+                                        args.predict_PFM_file, args.draw_seq_logos)
+                print " Completed PFM calculation."
+            if args.test_predictions_file:
+                print " Writing test predictions."
+                write_test_predictions(test_bkgs+test_seqs, test_bkg_ids+test_ids, y_test, predictions, args.test_predictions_file)
+                print " Completed writing test predictions."
+
         print " CV runmode completed."
 
 
