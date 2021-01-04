@@ -110,17 +110,17 @@ class Network:
 
 
         network['cn_layers'] = lasagne.layers.ConcatLayer(incomings=full2, axis=2)
-        network['l_sumc'] = lasagne.layers.ConcatLayer(incomings=full, axis=1)
-        network['l_sumc'] = lasagne.layers.ReshapeLayer(network['l_sumc'], (
-            self.batchsize, len(self.options["FILTER_SIZES"]), len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
+        #network['l_sumc'] = lasagne.layers.ConcatLayer(incomings=full, axis=1)
+        #network['l_sumc'] = lasagne.layers.ReshapeLayer(network['l_sumc'], (
+        #    self.batchsize, len(self.options["FILTER_SIZES"]), len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
 
 
-        network['l_res_sumc'] = lasagne.layers.ReshapeLayer(network['l_sumc'], (
-            self.batchsize, len(self.options["FILTER_SIZES"]), len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
-        network['l_sum_rsumc'] = Sum_ax1(network['l_res_sumc'])
-        network['l_res_ssum'] = lasagne.layers.ReshapeLayer(network['l_sum_rsumc'], (
-            self.batchsize, 1, len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
-        network['l_res_ssum'] = High_divx(network['l_res_ssum'])
+        #network['l_res_sumc'] = lasagne.layers.ReshapeLayer(network['l_sumc'], (
+        #    self.batchsize, len(self.options["FILTER_SIZES"]), len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
+        #network['l_sum_rsumc'] = Sum_ax1(network['l_res_sumc'])
+        #network['l_res_ssum'] = lasagne.layers.ReshapeLayer(network['l_sum_rsumc'], (
+        #    self.batchsize, 1, len(self.options["VOCAB"]) * self.options["SEQ_SIZE"]))
+        #network['l_res_ssum'] = High_divx(network['l_res_ssum'])
 
         #network['l_res_ssum'] = lasagne.layers.ReshapeLayer(network['l_res_ssum'], (
         #    batchsize, self.options["BS_PR_SEQ"], len(self.options["VOCAB"])))
@@ -128,7 +128,7 @@ class Network:
         network['inp'] = lasagne.layers.ReshapeLayer(network['l_in'],
                                                      (self.batchsize, self.options["BS_PR_SEQ"], len(self.options["VOCAB"])))
 
-	network['inp_one'] = Divide_to_one(network['inp'])
+	#network['inp_one'] = Divide_to_one(network['inp'])
 
         network['l_lstmin'] = lasagne.layers.ConcatLayer(incomings=[network['cn_layers'], network['inp']], axis=2)
 
@@ -240,7 +240,7 @@ class Network:
         sys.stdout.flush()
 
     def compile_prediction_function(self):
-        print " Making Theano prediction function ...",
+        print " Making prediction function ...",
         sys.stdout.flush()
         start_time = time.time()
         prediction, profile, conv_weight, lstm_weight = lasagne.layers.get_output(
