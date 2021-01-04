@@ -1006,7 +1006,7 @@ def main():
 
     bkg_list, bkg_ids_list = [], []
     if args.force_bed or args.sequences.lower().endswith(".bed"):
-        print " Reading sequences from BED file"
+        print(" Reading sequences from BED file")
         if args.genome_file is None:
             raise Exception(" Genome FASTA file needed for reading BED file.")
         if args.gtf_file is None:
@@ -1047,21 +1047,21 @@ def main():
             raise Exception(" Set of binding sequences is empty.")
 
     if args.runmode == "train" or args.runmode == "cv":
-        #print args.network_file
-        #print args.predict_function_file
+        #print("Saving network parameters to: {}".format(args.network_file))
+        #print("Saving prediction function to: {}".format(args.predict_function_file))
         freq = np.array([1.0, 1.0, 1.0, 1.0])
         max_input_length = max(max(map(len, seq_list)), (max(map(len, bkg_list)) if len(bkg_list) > 0 else 0))
         print(" Maximum input length: {}".format(max_input_length))
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
         max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep
-        #print " Max used length:", str(max_length)
-        print('\n General model settings:')
+        #print(" Max used length: {}".format(max_length))
+        print("\n General model settings:")
         print(" Setting up CNN_BLSTM model")
-        print(' Class 0: background')
-        print(' Class 1: positive binding sites')
-        print " CNN filter sizes: " + ", ".join(str(i) for i in filter_sizes)
+        print(" Class 0: background")
+        print(" Class 1: positive binding sites")
+        print(" CNN filter sizes: {}".format(", ".join(str(i) for i in filter_sizes)))
         print(" Number of BLSTM nodes: {}".format(args.lstm_nodes))
-        print('\n General training settings:')
+        print("\n General training settings:")
         print(" Number of training epochs: {}".format(args.num_epochs))
         print(" Stopping early after {} epochs without model improvement".format(args.early_stopping))
         print(" Batch size: {}".format(args.batch_size))
@@ -1138,7 +1138,7 @@ def main():
                                     args.predict_PFM_file, args.draw_seq_logos)
         if args.test_output_file:
             write_test_output(auroc, roc, args.test_output_file)
-            print len(seq_list), len(seq_ids_list), len(predictions), predictions[0]
+            #print(len(seq_list), len(seq_ids_list), len(predictions), predictions[0])
         if args.test_predictions_file:
             write_test_predictions(test_bkgs+test_seqs, test_bkg_ids+test_ids, y_test, predictions, args.test_predictions_file)
 
@@ -1156,7 +1156,7 @@ def main():
                     predict_fn, outpar = net.compile_prediction_function()
                     output_shape = net.network['l_in'].output_shape
                 except TypeError:
-                    print " Error loading network"
+                    print(" Error loading network")
         elif args.network_file:
             try:
                 net,freq = network.load_network(args.network_file)
@@ -1180,6 +1180,7 @@ def main():
             max_network_length = int(options["SEQ_SIZE"])
         max_length = int(options["SEQ_SIZE"])
     if args.runmode == "predict":
+        print("\n Running in 'predict' runmode")
         start_time = time.time()
         var_list = []
         if args.variant_sequences:
@@ -1241,7 +1242,7 @@ def main():
                                 make_single_profile(scores=weight[i], seq=seq_list[i], name=seq_ids_list[i], sigmoid_profile=args.sigmoid_profile, output_name=args.predict_output_file)
 
         if args.predict_PFM_file:
-            temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights_par"].reshape(-1, max_length, 1)
+            temp = np.array(X_test).reshape((-1, max_length, len(options["VOCAB"]))) * results["weights_par"].reshape(-1, max_length, 1)
             pfmin = np.array(X_test) * temp.reshape(X_test.shape)
             pfmin[pfmin < 0] = 0
             pfmin = pfmin / (pfmin + 0.000000001)
@@ -1284,12 +1285,13 @@ def main():
             convolutional_logos(arg1, cn1, ins1, FS,
                                 [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
                                 args.predict_PFM_file, args.draw_seq_logos)
-            print " PFMs based on the " + str(number_of_seqs) + " best scoring sequences have been made"
+            print(" PFMs based on the {} best scoring sequences have been made".format(number_of_seqs))
         ctime = time.time() - start_time
         print(" Entire prediction took {:.3f}s".format(ctime))
 
 
     elif args.runmode == "predict_long":
+        print("\n Running in 'predict_long' runmode")
         prediction_weights = []
         short_seq_list = []
         for seq_i in range(len(seq_list)):
@@ -1367,9 +1369,9 @@ def main():
         #all_strings = k_fold_generator_strings(train_bkgs, train_bkg_ids, k_fold=cross_fold)
         all_strings2 = k_fold_generator_strings2(train_seqs, train_ids, train_bkgs, train_bkg_ids, k_fold=cross_fold)
         #for qqb in range(len(all_inputs)):
-        #    all_inputs[qqb] += all_strings[qqb]
+        #    all_inputs[qqb] += all_strings2[qqb]
         if args.export_test_sets:
-            for i in range(len(all_strings2)):
+            for i in range(len(all_strings2)):        
                 bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[i]
                 with open("cv" + str(i+1) + "-test.pos.fa", "w") as fa_out:
                     for j in range(len(te_sqs)):
@@ -1381,27 +1383,30 @@ def main():
         print("\n Building and training network")
         net = build_network(args, max_length, filter_sizes)
         net.build_model()
-        n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
+#        n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
+#
+#       if args.performance_selection == "loss":
+#            print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
+#            print(" All loss scores: {}".format(auc_values))
+#            best_cv = np.argmin(auc_values)+1
+#
+#        if args.performance_selection == "auroc":
+#            print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
+#            print(" All AUROC scores: {}".format(auc_values))
+#            best_cv = argmax(auc_values)+1
 
-        if args.performance_selection == "loss":
-            print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
-            print(" All loss scores: {}".format(auc_values))
-            best_cv = np.argmin(auc_values)+1
-
-        if args.performance_selection == "auroc":
-            print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
-            print(" All AUROC scores: {}".format(auc_values))
-            best_cv = argmax(auc_values)+1
-
-        print("\n Saving overall best network.")
-        net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
-        network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
-        network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
+#        print("\n Saving overall best network.")
+#        net,freq = network.load_network(args.network_file.replace('_cv_cycle_data.pkl','')+"_cv"+str(best_cv))
+#        network.save_network(net.network, net.options, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_model", freq)
+#        network.save_prediction_function(net, args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn", freq)
+        best_cv = 5
         if args.test_output_file or args.predict_PFM_file or args.test_predictions_file:
-            print("\n Loading best model's prediction function to predict on the held out test set.")
+            print("\n Loading best model's prediction function")
             predict_fn, options, output_shape, outpar, freq = network.load_prediction_function(args.network_file.replace('_cv_cycle_data.pkl','')+"_best_cv_predict_fn")
-            print(" Predicting using best model")
-            train, val, test, tr_sqs, tr_ids, va_sqs, va_ids, te_sqs, te_ids = all_inputs[best_auroc_cv-1]
+        if args.test_output_file or args.test_predictions_file:
+            print(" Predicting on the held out test set using best model")
+            bkg_tr_ids, bkg_tr_sqs, tr_ids, tr_sqs, bkg_va_ids, bkg_va_sqs, va_ids, va_sqs, bkg_te_ids, bkg_te_sqs, te_ids, te_sqs = all_strings2[best_cv-1]
+            train, val, test = all_inputs[best_cv-1]
             X_test, y_test = test
             results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
             predictions = results["predictions"]
@@ -1409,24 +1414,60 @@ def main():
                 print(" Computing AUROC curve based on {} predictions.".format(len(predictions)))
                 auroc, roc = get_auroc_data(y_test, predictions, segments=1000)
                 write_test_output(auroc, roc, args.test_output_file)
-                print(" Completed AUROC calculation.")
-            if args.predict_PFM_file:
-                print(" Computing PFM based on {} predictions.".format(len(predictions)))
-                temp = np.array(X_test).reshape((-1, max_length, 4)) * results["weights"].reshape(-1, max_length, 1)
-                pfmin = np.array(X_test) * temp.reshape(X_test.shape)
-                pfmin[pfmin < 0] = 0
-                pfmin = pfmin / (pfmin + 0.000000001)
-                FS = [len(seq_list[0]) - filter_sizes[i] / len(constants.VOCAB) + 1 for i in range(len(filter_sizes))]
-                convolutional_logos(results["argmax"], results["cnscore"], pfmin, FS,
-                                        [args.num_filters] * len(filter_sizes), filter_sizes, constants.VOCAB,
-                                        args.predict_PFM_file, args.draw_seq_logos)
-                print " Completed PFM calculation."
             if args.test_predictions_file:
-                print " Writing test predictions."
-                write_test_predictions(test_bkgs+test_seqs, test_bkg_ids+test_ids, y_test, predictions, args.test_predictions_file)
-                print " Completed writing test predictions."
+                print(" Writing test predictions.")
+                write_test_predictions(bkg_te_sqs+te_sqs, bkg_te_ids+te_ids, y_test, predictions, args.test_predictions_file)
+        if args.predict_PFM_file:
+            X_test = onehot_encode(bkg_list+seq_list, freq,  vocab=options["VOCAB"])
+            results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
+            predictions = results["predictions"]
+            max_length = int(options["SEQ_SIZE"])
+            temp = np.array(X_test).reshape((-1, max_length, len(options["VOCAB"]))) * results["weights_par"].reshape(-1, max_length, 1)
+            pfmin = np.array(X_test) * temp.reshape(X_test.shape)
+            pfmin[pfmin < 0] = 0
+            pfmin = pfmin / (pfmin + 0.000000001)
+            filter_sizes = options["FILTER_SIZES"]
 
-        print " CV runmode completed."
+            cn = results["cnscore"]
+            arg = results["argmax"]
+            ins = pfmin
+
+            pred = []
+            #for pr in range(len(predictions)):
+            #   pred.append( [predictions[pr][0], arg[pr], cn[pr], ins[pr]] )
+
+            for pr in range(len(predictions)):
+                pred.append( [predictions[pr][0], pr] )
+
+            pred.sort()
+            pred.reverse()
+
+            arg1 = []
+            cn1 = []
+            ins1 = []
+            if args.PFM_on_half == True:
+                number_of_seqs = int(len(pred)/2)
+                for i in range(number_of_seqs):
+                    arg1.append(arg[pred[i][1]])
+                    cn1.append(cn[pred[i][1]])
+                    ins1.append(ins[pred[i][1]])
+
+            if args.PFM_on_half != True:
+                number_of_seqs = int(min([1000, len(pred)]))
+                for i in range(number_of_seqs):
+                    arg1.append(arg[pred[i][1]])
+                    cn1.append(cn[pred[i][1]])
+                    ins1.append(ins[pred[i][1]])
+
+
+            FS = [len(seq_list[0]) - filter_sizes[i] / len(options["VOCAB"]) + 1 for i in range(len(filter_sizes))]
+
+            convolutional_logos(arg1, cn1, ins1, FS,
+                                [options["FILTERS"]] * len(filter_sizes), filter_sizes, options["VOCAB"],
+                                args.predict_PFM_file, args.draw_seq_logos)
+            print(" PFMs based on the {} best scoring sequences have been made".format(number_of_seqs))
+
+        print(" CV runmode completed.")
 
 
 if __name__ == "__main__":
