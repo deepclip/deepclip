@@ -57,13 +57,13 @@ def parse_arguments():
                         required=False,
                         type=str,
                         default=None,
-                        help="FASTA file containing binding sequences. In training and cv mode, a BED file can also be supplied.")
+                        help="FASTA file containing (binding) sequences. In training and cv mode, a BED file can also be supplied. If a BED file is provided, background sequences are generated from this. In prediction modes, the sequences are used as input.")
 
     input_group.add_argument("--background_sequences",
                         required=False,
                         type=str,
                         default=None,
-                        help="BED or FASTA file containing background (non-binding) sites or sequences.")
+                        help="FASTA file containing background (non-binding) sequences. If this is provided, the sequences override any background sequences that were generated if a BED file was used to supply binding sites.")
 
     output_group.add_argument("--write_sequences",
                         required=False,
