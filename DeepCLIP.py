@@ -1106,6 +1106,7 @@ def main():
 
         print("\n Building and training network")
         net = build_network(args, max_length, filter_sizes)
+        net.build_model()
         net.fit(all_inputs, num_epochs=args.num_epochs)
 
         if args.network_file:
@@ -1379,16 +1380,17 @@ def main():
 
         print("\n Building and training network")
         net = build_network(args, max_length, filter_sizes)
+        net.build_model()
         n, cv_results, auc_values, roc_sets = net.fit(all_inputs, num_epochs=args.num_epochs)
 
         if args.performance_selection == "loss":
             print(" Lowest loss: {:.4f} from CV set {}". format(auc_values[np.argmin(auc_values)], np.argmin(auc_values)+1))
-            print(" All loss scores: {:.4f}".format(auc_values))
+            print(" All loss scores: {}".format(auc_values))
             best_cv = np.argmin(auc_values)+1
 
         if args.performance_selection == "auroc":
             print(" Best AUROC: {:.4f} from CV set {}".format(auc_values[argmax(auc_values)], argmax(auc_values)+1))
-            print(" All AUROC scores: {:.4f}".format(auc_values))
+            print(" All AUROC scores: {}".format(auc_values))
             best_cv = argmax(auc_values)+1
 
         print("\n Saving overall best network.")

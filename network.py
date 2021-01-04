@@ -470,7 +470,7 @@ class Network:
                 if auroc >= self.options["auc_thr"] or auroctr >= self.options["auc_thr"]:
                     breaker += 1
                     if breaker >= 2:
-                        print(" Breaking this run because 20 epochs produced either training or validation AUROC above {}".format(self.options["auc_thr"]))
+                        print(" Breaking this run because 2 epochs produced either training or validation AUROC above {}".format(self.options["auc_thr"]))
                         break
                 if self.options["par_selection"] == "auroc":
                     if auroc < best_auroc:
@@ -495,7 +495,7 @@ class Network:
 		#print(self.network['output_params'])
                 predict_fn, outpar = self.compile_prediction_function()
                 freq = np.array([1.0, 1.0, 1.0, 1.0])
-                save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), freq)
+                save_network(self.network, self.options, self.options['cvfile'] + "_cv" + str(cf+1), [1,1,1,1])
                 results = predict(self.network, self.options, predict_fn, X_test, self.network['output_params'])        
                 cv_results.append(results)
                 if self.options["par_selection"] == "auroc":
