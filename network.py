@@ -170,7 +170,7 @@ class Network:
 
 
 	network['l_profile'] = lasagne.layers.DropoutLayer(Sum_last_ax(network['l_sumz2x']), p=self.options["DROPOUT_OUT"])
-        print " Dropout:",str(self.options["DROPOUT_OUT"])
+        #print " Dropout:",str(self.options["DROPOUT_OUT"])
 
         #network['l_attention'] = High_divabs(network['l_sumz2x'])
 	#network['l_attention'] = network['l_sumz2x']

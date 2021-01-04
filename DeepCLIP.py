@@ -1047,8 +1047,8 @@ def main():
             raise Exception(" Set of binding sequences is empty.")
 
     if args.runmode == "train" or args.runmode == "cv":
-        print args.network_file
-        print args.predict_function_file
+        #print args.network_file
+        #print args.predict_function_file
 
         freq = np.array([1.0, 1.0, 1.0, 1.0])
 
@@ -1104,7 +1104,7 @@ def main():
 
         X_test, y_test = onehot_binary(test_bkgs, test_seqs, freq, vocab=constants.VOCAB)
 
-        print X_test.shape, X_test[0], X_test[1]
+        #print X_test.shape, X_test[0], X_test[1]
 
         net.fit(all_inputs, num_epochs=args.num_epochs)
 
@@ -1119,7 +1119,7 @@ def main():
         predict_fn, outpar = net.compile_prediction_function()
         results = network.predict(net, net.options, predict_fn, X_test, outpar)
 
-        print 'overall max score of test set: ', np.max(abs(np.array(results["weights"])))
+        print " Overall max score of test set: ", np.max(abs(np.array(results["weights"])))
 
         # returns a dict with different results, but always
         # at least "predictions" (classifier) and "profiles" (binding profiles)
@@ -1188,11 +1188,11 @@ def main():
         if max_input_length > max_network_length:
             raise Exception("Cannot predict on sequences longer than the network was trained on.\n Maximum input length was {} bp, but the network cannot handle sequences longer than {} bp.\n Try using --runmode predict_long instead.".format(str(max_input_length),str(max_network_length)))
 
-        print seq_list[0]
-        print len(seq_list[0])
+        #print seq_list[0]
+        #print len(seq_list[0])
         seq_list = encode_input_data(seq_list, max_network_length + 2*(max_filter_size - 1)*nep)
-        print seq_list[0]
-        print len(seq_list[0])
+        #print seq_list[0]
+        #print len(seq_list[0])
 
         print " One-hot encoding sequences"
         X_test = onehot_encode(seq_list, freq,  vocab=constants.VOCAB)
