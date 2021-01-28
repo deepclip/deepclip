@@ -249,7 +249,7 @@ def parse_arguments():
                         required=False,
                         type=bool,
                         default=False,
-                        help="Write sequence logo data to JSON file based top 50-percent sequences with highest prediction.")
+                        help="Write sequence logo data to JSON file based on the top 50-percent sequences with highest prediction.")
 
     input_group.add_argument("--balanced_input",
                         action='store_true',
