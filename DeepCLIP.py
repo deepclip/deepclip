@@ -283,6 +283,11 @@ def parse_arguments():
                         type=str,
                         default="auroc",
                         help='Use this measure to select the best performing model [auroc, loss]. Default: auroc')
+    training.add_argument("--force_max_length",
+                        required=False,
+                        type=int,
+                        default=0,
+                        help="Force maximum length of model input during training to be this value. This results in a model capable of processing longer reads than it was trained on.")
     output_group.add_argument("--export_test_sets",
                         action='store_true',
                         help="Enables exporting of test datasets when running in CV runmode. Any 'n' bases in the input are removed.")
@@ -1056,6 +1061,9 @@ def main():
         freq = np.array([1.0, 1.0, 1.0, 1.0])
         max_input_length = max(max(map(len, seq_list)), (max(map(len, bkg_list)) if len(bkg_list) > 0 else 0))
         print(" Maximum input length: {}".format(max_input_length))
+        if args.force_max_length > 0:
+            print " Forcing max input length to be:", str(args.force_max_length)
+            max_input_length = args.force_max_length
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
         max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep
         #print(" Max used length: {}".format(max_length))
