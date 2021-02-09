@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import json
 from calculate_PFMs import printing_seq_logo
@@ -65,7 +66,7 @@ def make_cn_seqlogos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB):
 
 
 def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB, pfm_json_outfile, draw_seq_logos):
-    print '\n Making PFMs based on convolutional filters'
+    print('\n Making PFMs based on convolutional filters')
     t, tt, ttt, tttt = make_cn_seqlogos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB)
     json_obj = {}
     json_obj["logos"] = []
@@ -77,7 +78,7 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
             filter_num += 1
             pfm_name = "PFM_" + str(FILTER_SIZES[i]/len(VOCAB))+ "_" + str(ii)
             lg_raw = (ttt[i][ii].T) / np.sum((ttt[i][ii] + pfm_add).T, axis=0)
-            #print lg_raw.shape
+            #print("lg_raw: {}".format(lg_raw))
             if np.sum(lg_raw) > 0:
                 lg_raw[lg_raw < 0] = 0
                 lg = lg_raw + pfm_add # offset to prevent log(0) error
@@ -85,7 +86,8 @@ def convolutional_logos(argmax, cnscore, inseq, FS, FILTERS, FILTER_SIZES, VOCAB
                 #pfm_R_json_obj[pfm_name] = list([list(k) for k in lg])
 
                 lg_raw = lg_raw.T
-                info_per_bp = np.sum(2 + np.sum(lg_raw/np.sum(lg_raw+pfm_add,axis=0) * np.log2(lg_raw/np.sum(lg_raw+pfm_add,axis=0)), axis=-1, keepdims = True))/len(lg_raw)
+                pfm = lg.T
+                info_per_bp = np.sum(np.sum(np.log2(((pfm.T)/np.sum(pfm,axis=1)).T)*((pfm.T)/np.sum(pfm,axis=1)).T, axis=1) + np.log2(len(pfm.T)))/len(pfm)
 
                 json_obj["logos"].append({
                     'size': FILTER_SIZES[i] / len(VOCAB),
