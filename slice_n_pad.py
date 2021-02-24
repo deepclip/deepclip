@@ -34,7 +34,7 @@ def shape_convolutions(pool, BATCH_SIZE, FILTER_SIZES, FS, ALL_F, VOCAB, SEQ_SIZ
         pool = lasagne.layers.ReshapeLayer(pool, (BATCH_SIZE, ALL_F, len(VOCAB) * SEQ_SIZE))
 
         slatt_layers = []
-        for i in xrange(len(FILTER_SIZES)):
+        for i in range(len(FILTER_SIZES)):
             if i <= 1:
                 if i == 0:
                     slatt_layers.append(lasagne.layers.SliceLayer(pool, indices=slice(0, FS[0]), axis=1))
@@ -50,22 +50,22 @@ def shape_convolutions(pool, BATCH_SIZE, FILTER_SIZES, FS, ALL_F, VOCAB, SEQ_SIZ
 def shape_convolutions2(pool, BATCH_SIZE, FILTER_SIZES, FS, VOCAB, SEQ_SIZE, nr):
     """ Shapes the convolutional layer """
     convolutions = []
-    for i in range(FILTER_SIZES[nr]):
+    for i in range(int(FILTER_SIZES[nr])):
         convolutions.append(pool)
 
     pool = lasagne.layers.ConcatLayer(incomings=convolutions, axis=1)
     pool = lasagne.layers.DimshuffleLayer(pool, (0, 2, 1))
-    layer = lasagne.layers.ReshapeLayer(pool, (BATCH_SIZE, 1, FS[nr] * FILTER_SIZES[nr]))
+    layer = lasagne.layers.ReshapeLayer(pool, (BATCH_SIZE, 1, int(FS[nr] * FILTER_SIZES[nr])))
 
     mini_seqs = []
-    for i in range(FS[nr]):
-        s = lasagne.layers.SliceLayer(layer, indices=slice(i * FILTER_SIZES[nr], i * FILTER_SIZES[nr] + FILTER_SIZES[nr]), axis=2)
-        pad0 = lasagne.layers.PadLayer(s, width=[(i*len(VOCAB), len(VOCAB) * SEQ_SIZE - i*len(VOCAB) - FILTER_SIZES[nr])], val=0,
+    for i in range(int(FS[nr])):
+        s = lasagne.layers.SliceLayer(layer, indices=slice(int(i * FILTER_SIZES[nr]), int(i * FILTER_SIZES[nr]) + int(FILTER_SIZES[nr])), axis=2)
+        pad0 = lasagne.layers.PadLayer(s, width=[(i*len(VOCAB), len(VOCAB) * int(SEQ_SIZE) - i*len(VOCAB) - int(FILTER_SIZES[nr]))], val=0,
                                        batch_ndim=2)
-        pad0 = lasagne.layers.ReshapeLayer(pad0, (BATCH_SIZE, 1, len(VOCAB) * SEQ_SIZE))
+        pad0 = lasagne.layers.ReshapeLayer(pad0, (BATCH_SIZE, 1, int(len(VOCAB) * SEQ_SIZE)))
         mini_seqs.append(pad0)
 
     pad = lasagne.layers.ConcatLayer(incomings=mini_seqs, axis=1)
-    pad = lasagne.layers.ReshapeLayer(pad, (BATCH_SIZE, FS[nr], len(VOCAB) * SEQ_SIZE))
+    pad = lasagne.layers.ReshapeLayer(pad, (BATCH_SIZE, int(FS[nr]), int(len(VOCAB) * SEQ_SIZE)))
 
     return pad

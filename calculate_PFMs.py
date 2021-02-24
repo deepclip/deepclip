@@ -12,7 +12,11 @@ import numpy as np
 from pylab import rcParams
 from matplotlib.ticker import MaxNLocator
 import os
-import cPickle
+import sys
+if int(sys.version_info[0]) < 3:
+    import cPickle as pickle
+else:
+    import pickle
 
 
 
@@ -32,13 +36,13 @@ if tou are using the zoom function, you need to let it show on the y-axis
 
 def printing_seq_logo(psfm, score, name, zoom = 0):
     with open(os.path.dirname(os.path.abspath(__file__)) + '/let_a.pkl','rb') as ff:
-        A = cPickle.load(ff)
+        A = pickle.load(ff)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/let_c.pkl','rb') as ff:
-        C = cPickle.load(ff)
+        C = pickle.load(ff)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/let_g.pkl','rb') as ff:
-        G = cPickle.load(ff)
+        G = pickle.load(ff)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/let_u.pkl','rb') as ff:
-        U = cPickle.load(ff)
+        U = pickle.load(ff)
 
     ox,b = psfm_to_bit_matrix(psfm)
 
@@ -131,9 +135,9 @@ def creating_letter(importance,let,letter,base_pos,space,o,b):
 
 
     if new_height < len(new_let):
-        print 'this sequence logo is very incorrect - too large'
+        print('this sequence logo is very incorrect - too large')
     if new_height > len(new_let):
-        print 'this sequence logo is very incorrect - too small'
+        print('this sequence logo is very incorrect - too small')
 
 
     if space > 0:
@@ -166,16 +170,16 @@ def psfm_to_bit_matrix(A1):
     for ii in range(len(x2h)):  # this gives the overall_info for one prob column
         x3 = np.log2(4)
 
-	print x2h[ii], np.sum(x2h[ii])
+        print(str(x2h[ii]), str(np.sum(x2h[ii])))
         for iii in range(len(x2h[0])):
             if x2h[ii][iii] == 0:
                 x3 += 0
             else:
                 x3 += -(-x2h[ii][iii]*np.log2(x2h[ii][iii])) 
 	    
-	if np.sum(x2h[ii]) <= 4e-09:
-	    x3 = 0
-	    x2h[ii] += 0.25
+        if np.sum(x2h[ii]) <= 4e-09:
+            x3 = 0
+            x2h[ii] += 0.25
         temp.append(x3)
     temp = np.hstack(temp)
     overall_info.append(temp)

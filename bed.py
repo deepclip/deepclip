@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
+#from Bio.Alphabet import generic_dna
 import HTSeq
 import argparse
 import random
@@ -102,7 +102,7 @@ def featuretype_filter(feature, featuretype):
 
 
 def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, width, padding, graphprot_compatible=False):
-    print " Reading primary peaks from BED file"
+    print(" Reading primary peaks from BED file")
     bed_file = HTSeq.BED_Reader(bed_file)
     input_peaks = HTSeq.GenomicArrayOfSets("auto", stranded=True)
     total_peaks = 0
@@ -117,7 +117,7 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
             peak.iv.end += padding
         input_peaks[peak.iv] += peak.name
 
-    print " Reading GTF file from " + str(gtf_file)
+    print(" Reading GTF file from " + str(gtf_file))
     genes = HTSeq.GenomicArrayOfSets("auto", stranded=True)
     gene_dict = dict()
     gtf_file = HTSeq.GFF_Reader(gtf_file)
@@ -128,7 +128,7 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
             genes[feature.iv] += feature.name
             gene_dict[feature.name] = feature
     if total_genes == 0: # this GTF file doesn't have 'gene' features, we need to build the gene intervals from the exon intervals instead
-        print " No 'gene' features in GTF, building gene intervals from exons instead."
+        print(" No 'gene' features in GTF, building gene intervals from exons instead.")
         for feature in gtf_file:
             if feature.type == "exon":
                 gene = gene_dict.get(feature.attr["gene_id"], False)
@@ -144,14 +144,14 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
                     gene_dict[feature.attr["gene_id"]] = gene
         for gene in gene_dict.values():
             genes[gene.iv] += gene.attr["gene_id"]
-    print " Loaded {} total genes.".format(total_genes)
+    print(" Loaded {} total genes.".format(total_genes))
 
-    print " Reading genome from file " + str(fasta_file) + " ...",
+    print(" Reading genome from file " + str(fasta_file) + " ...",)
     sys.stdout.flush()
     genome = read_genome(fasta_file)
-    print "done"
+    print("done")
 
-    print " Filtering and constructing background..."
+    print(" Filtering and constructing background...")
     pos_peaks = HTSeq.GenomicArrayOfSets("auto", stranded=True)
     neg_peaks = HTSeq.GenomicArrayOfSets("auto", stranded=True)
 
@@ -224,12 +224,12 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
                     if not overlap_peak and not overlap_neg_peak: # yes! found a non-overlapping region suitable as background sequence
                         overlap = False
                     if overlap_counter > 1000:  # accept that a non-overlap can't be found but don't use this peak
-                        print "Warning: failed to find non-overlapping background for " + str(peak.name)
+                        print("Warning: failed to find non-overlapping background for " + str(peak.name))
                         valid = False
                         overlap = False
                         invalid += 1
                 if 'n' in str(genome[neg_peak.chrom][neg_peak.start:neg_peak.end].seq).lower():
-                    print "Warning: 'n' in background sequence for " + str(peak.name)
+                    print("Warning: 'n' in background sequence for " + str(peak.name))
                     valid = False
                     invalid += 1
                 if valid:
@@ -256,10 +256,10 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
         elif overlaps > 1 and valid:
             redundant += 1
 
-    print " Found {} invalid peaks (too short or too long).".format(invalid)
-    print " Found {} valid but redundant peaks.".format(redundant)
-    print " Found {} non-redundant peaks that did not overlap any genes, and {} that overlapped multiple genes.".format(not_in_gene, multiple_genes)
-    print " Found {} valid non-redundant peaks overlapping genes.".format(len(pos_seqs))
+    print(" Found {} invalid peaks (too short or too long).".format(invalid))
+    print(" Found {} valid but redundant peaks.".format(redundant))
+    print(" Found {} non-redundant peaks that did not overlap any genes, and {} that overlapped multiple genes.".format(not_in_gene, multiple_genes))
+    print(" Found {} valid non-redundant peaks overlapping genes.".format(len(pos_seqs)))
 
     return pos_seqs, neg_seqs, seq_ids
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import argparse
 import sys
 import json
@@ -27,7 +28,7 @@ def parse_arguments():
     description = "Constructs a neural network to identify protein binding motifs."
     epilog = "Authors:\n\tAlexander G Bjørnholt Grønning <alexander.groenning@sund.ku.dk>,\n\tThomas Koed Doktor <thomaskd@bmb.sdu.dk>"
 
-    parser = argparse.ArgumentParser(description=description, version=version, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=description, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     required = parser.add_argument_group('Required arguments')
     input_group = parser.add_argument_group("Input file options")
     bed_input_group = parser.add_argument_group("BED-file specific input options")
@@ -35,6 +36,7 @@ def parse_arguments():
     training = parser.add_argument_group("Training options")
     output_group = parser.add_argument_group("Output options")
 
+    parser.add_argument('-v', "--version", action='version', version=version)
     required.add_argument("--runmode",
                         required=True,
                         choices=["cv", "train", "predict", "predict_long"],
@@ -325,12 +327,12 @@ def make_profiles(srrap, rapsq, seq_ids_list, rang, name):
             for kk in range(len(rapsq[i].lower())):
                 if rapsq[i].lower()[kk] != 'n':
                     tmp.append(y[kk])
-                    print rapsq[i].lower()[kk],
-            print ''
+                    print(rapsq[i].lower()[kk],)
+            print('')
             ys.append(tmp)
 
 
-        print len(ys[0])
+        print(str(len(ys[0])))
         x = np.array(range(len(ys[0])))
 
         id = seq_ids_list[i]
@@ -364,7 +366,7 @@ def make_profiles2(srrap, rapsq, seq_ids_list, rang, name, make_diff, sigmoid_pr
         wt = 0
         wt += srrap[0]
 
-        print len(srrap), 'GGGGGGGGGGGGGGGGGGGG'
+        print(str(len(srrap)), 'GGGGGGGGGGGGGGGGGGGG')
         for qq in range(len(srrap)):
             srrap[qq] = srrap[qq] - wt
 
@@ -372,9 +374,9 @@ def make_profiles2(srrap, rapsq, seq_ids_list, rang, name, make_diff, sigmoid_pr
     color = ['black','red','blue','green']
     name1 = ['WT','MUT', 'MUT2', 'MUT3']
 
-    print " Making weight profiles . . .",
+    print(" Making weight profiles . . .",)
     for i in range(0,len(rapsq),2):
-        print '.',
+        print('.',)
         sys.stdout.flush()
 
         # calculated total profile scores
@@ -466,7 +468,7 @@ def make_profiles2(srrap, rapsq, seq_ids_list, rang, name, make_diff, sigmoid_pr
         title = "{}>{} Score: {:.3f} -> {:.3f} (Difference: {:.3f}).".format(id, id2, score1, score2, difference)
         #plt.title(title, size=2*scaling_factor)
         filename = make_filename_safe(name + '-' + str(id) + '_' + str(id2)+'_profile' + '.png')
-        print "\n Saving", filename, "with scaling_factor =", str(scaling_factor)
+        print("\n Saving", filename, "with scaling_factor =", str(scaling_factor))
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
 
@@ -574,7 +576,7 @@ def make_paired_profile(wt_scores, var_scores, wt_seq, var_seq, wt_name, var_nam
     title = "{}>{} Score: {:.3f} -> {:.3f} (Difference: {:.3f}).".format(id, id2, score1, score2, difference)
     #plt.title(title, size=2*scaling_factor)
     filename = make_filename_safe(output_name + '-' + str(id) + '_' + str(id2)+'_profile' + '.png')
-    print "\n Saving", filename, "with scaling_factor =", str(scaling_factor)
+    print("\n Saving", filename, "with scaling_factor =", str(scaling_factor))
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
 
@@ -645,7 +647,7 @@ def make_single_profile(scores, seq, name, sigmoid_profile, output_name, color =
     title = "{} Score: {:.3f}".format(id, score1)
     #plt.title(title, size=2*scaling_factor)
     filename = make_filename_safe(output_name + '-' + str(id) + '_profile' + '.png')
-    print "\n Saving", filename, "with scaling_factor =", str(scaling_factor)
+    print("\n Saving", filename, "with scaling_factor =", str(scaling_factor))
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
 
@@ -658,7 +660,7 @@ def check_same_length(input_seqs, length):
     output_seqs = []
     for i in range(len(input_seqs)):
         if len(input_seqs[i]) != length:
-            print "\tSequence {} is not {} bp.".format(str(i), str(len(input_seqs[i])))
+            print("\tSequence {} is not {} bp.".format(str(i), str(len(input_seqs[i]))))
         else:
             output_seqs.append(input_seqs[i])
     return output_seqs
@@ -671,7 +673,7 @@ def encode_input_data(seqs, max_length):
 
 def shuffle_all_seqs(seqs):
     all_seqs = list(''.join(seqs))
-    random.shuffle(all_seqs)
+    random.shuffle(all_seqs, random.random)
     all_seqs = ''.join(all_seqs)
 
     k = 0
@@ -686,13 +688,13 @@ def pad_sequences_with_N(added_seqs, length):
     for i in range(len(added_seqs)):
         begin = end = 0  # make sure these are zero
         if len(added_seqs[i]) < length:
-            missing = length - len(added_seqs[i])
+            missing = int(length - len(added_seqs[i]))
             begin = int(missing/2)
-            end = missing - begin
+            end = int(missing - begin)
         added_seqs[i] = begin*'n' + added_seqs[i] + end*'n'
         if len(added_seqs[i]) != length:
-            print len(added_seqs[i])
-            print i
+            print(str(len(added_seqs[i])))
+            print(str(i))
             break
     return added_seqs
 
@@ -831,7 +833,7 @@ def split_data(seqs, ids, ratios):
     assert ratios[0] + ratios[1] < 1.0
 
     zz = list(zip(seqs, ids))
-    random.shuffle(zz)
+    random.shuffle(zz, random.random)
     seqs, ids = zip(*zz)
 
     ntrain = int(round(ratios[0] * len(seqs)))
@@ -1000,7 +1002,10 @@ def main():
     args = parse_arguments()
     import bed
     import fasta
-    import cPickle as pickle
+    if int(sys.version_info[0]) < 3:
+        import cPickle as pickle
+    else:
+        import pickle
     from roc import get_auroc_data
     from making_CNN_PFMs import convolutional_logos
 
@@ -1062,10 +1067,10 @@ def main():
         max_input_length = max(max(map(len, seq_list)), (max(map(len, bkg_list)) if len(bkg_list) > 0 else 0))
         print(" Maximum input length: {}".format(max_input_length))
         if args.force_max_length > 0:
-            print " Forcing max input length to be:", str(args.force_max_length)
+            print(" Forcing max input length to be:", str(args.force_max_length))
             max_input_length = args.force_max_length
         filter_sizes = [len(constants.VOCAB)*int(x) for x in args.filter_sizes]
-        max_length = max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep
+        max_length = int(max_input_length + (max(filter_sizes)/len(constants.VOCAB)-1)*2*nep)
         #print(" Max used length: {}".format(max_length))
         print("\n General model settings:")
         print(" Setting up CNN_BLSTM model")
@@ -1119,6 +1124,7 @@ def main():
         print("\n Building and training network")
         net = build_network(args, max_length, filter_sizes)
         net.build_model()
+        print("\n Running net.fit()")
         net.fit(all_inputs, num_epochs=args.num_epochs)
 
         if args.network_file:
@@ -1156,6 +1162,7 @@ def main():
 
     elif args.runmode == "predict" or args.runmode == "predict_long":
         # try loading the network, either from prediction function, or from the network itself and then compile a prediction function
+        pred_load_start = time.time()
         if args.predict_function_file:
             print(" Loading prediction function from: {}".format(args.predict_function_file))
             try:
@@ -1182,9 +1189,12 @@ def main():
                 except TypeError:
                     print(" Error loading network")
 
+        pred_load_end = time.time()
         if not predict_fn:
             print("Couldn't load model!")
             sys.exit()
+        else:
+            print("Took {:.3f}s to load prediction function.".format(pred_load_end-pred_load_start))
 
         max_filter_size = max(options["FILTER_SIZES"])/4
         max_network_length = int(options["SEQ_SIZE"] - 2*(max_filter_size - 1))
@@ -1215,7 +1225,7 @@ def main():
 #        print " Predicting binding"
         results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
         predictions = results["predictions"]
-        inp = np.sum(np.reshape(X_test, (-1, options["SEQ_SIZE"], len(options["VOCAB"]))), axis =-1)
+        inp = np.sum(np.reshape(X_test, (-1, int(options["SEQ_SIZE"]), len(options["VOCAB"]))), axis =-1)
         weight = results["weights_par"]*inp
 #        print "predicted " + str(len(predictions)) + " sequences."
         if args.variant_sequences:
@@ -1254,7 +1264,7 @@ def main():
                                 make_single_profile(scores=weight[i], seq=seq_list[i], name=seq_ids_list[i], sigmoid_profile=args.sigmoid_profile, output_name=args.predict_output_file)
 
         if args.predict_PFM_file:
-            temp = np.array(X_test).reshape((-1, max_length, len(options["VOCAB"]))) * results["weights_par"].reshape(-1, max_length, 1)
+            temp = np.array(X_test).reshape((-1, max_length, int(len(options["VOCAB"])))) * results["weights_par"].reshape(-1, max_length, 1)
             pfmin = np.array(X_test) * temp.reshape(X_test.shape)
             pfmin[pfmin < 0] = 0
             pfmin = pfmin / (pfmin + 0.000000001)
@@ -1310,26 +1320,26 @@ def main():
             seq = seq_list[seq_i]
             temp_seq_list = []
             if len(seq) > max_network_length:
-                seq = (max_filter_size - 1)*'n' + seq + (max_filter_size - 1)*'n' # pad the seq at the boundaries
+                seq = (int(max_filter_size) - 1)*'n' + seq + (int(max_filter_size) - 1)*'n' # pad the seq at the boundaries
                 seq_list[seq_i] = seq
-                for s in range(0, len(seq) - (max_network_length+2*(max_filter_size - 1)-1)):
-                    segment = seq[0 + s:max_network_length+2*(max_filter_size - 1) + s].lower()
+                for s in range(int(len(seq) - (max_network_length+2*(max_filter_size - 1)-1))):
+                    segment = seq[0 + s:int(max_network_length+2*(max_filter_size - 1) + s)].lower()
                     temp_seq_list.append(segment)
-                temp_seq_list = encode_input_data(temp_seq_list, max_network_length+2*(max_filter_size - 1)*nep)
+                temp_seq_list = encode_input_data(temp_seq_list, int(max_network_length+2*(max_filter_size - 1)*nep))
                 #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
                 results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
                 predictions = results["predictions"]
-                inp = np.sum(np.reshape(X_test, (-1, options["SEQ_SIZE"], len(options["VOCAB"]))), axis =-1)
+                inp = np.sum(np.reshape(X_test, (-1, int(options["SEQ_SIZE"]), len(options["VOCAB"]))), axis =-1)
                 weights = results["weights_par"]*inp
                 average_weights = np.zeros(len(seq))
                 b = 0
                 for weight in weights:
                     if b == 0:
-                        for w in range(max_filter_size - 1,int(len(weight)/2)):
+                        for w in range(int(max_filter_size - 1),int(len(weight)/2)):
                             average_weights[0+b+w] = weight[w]
-                    elif b == len(seq) - (max_network_length+2*(max_filter_size - 1)):
-                        for w in range(int(len(weight)/2),len(weight)-(max_filter_size - 1)):
+                    elif b == int(len(seq) - (max_network_length+2*(max_filter_size - 1))):
+                        for w in range(int(len(weight)/2),int(len(weight)-(max_filter_size - 1))):
                             average_weights[0+b+w] = weight[w]
                     else:
                         w = int(len(weight)/2) + 1
@@ -1338,13 +1348,13 @@ def main():
                 prediction_weights.append(average_weights)
 
             else:
-                temp_seq_list = encode_input_data([seq], max_network_length+2*(max_filter_size - 1)*nep)
+                temp_seq_list = encode_input_data([seq], int(max_network_length+2*(max_filter_size - 1)*nep))
                 seq_list[seq_i] = temp_seq_list[0]
                 #print " One-hot encoding sequences"
                 X_test = onehot_encode(temp_seq_list, freq,  vocab=constants.VOCAB)
                 results = network.predict_without_network(predict_fn, options, output_shape, X_test, outpar)
                 predictions = results["predictions"]
-                inp = np.sum(np.reshape(X_test, (-1, options["SEQ_SIZE"], len(options["VOCAB"]))), axis =-1)
+                inp = np.sum(np.reshape(X_test, (-1, int(options["SEQ_SIZE"]), len(options["VOCAB"]))), axis =-1)
                 weights = results["weights_par"]*inp
                 temp_weights = []
                 for w in weights[0]:

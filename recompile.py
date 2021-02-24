@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import network
 
@@ -9,10 +10,10 @@ def main():
 
     try:
         net, freq = network.load_network(network_file)
-        print " Recompiling and saving prediction function."
+        print(" Recompiling and saving prediction function.")
         network.save_prediction_function(net, output_file, freq)
     except ValueError:
-        print " Error loading network, trying prediction function instead."
+        print(" Error loading network, trying prediction function instead.")
 
 if __name__ == "__main__":
     main()

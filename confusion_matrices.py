@@ -19,11 +19,11 @@ def gradient_cm2(sr, a1):
     x1 = np.vstack(np.array([x[0], x[1]]))
     x2 = np.vstack(np.array([x[0] / len(sr), x[1] / len(a1)]))
     # x2 = np.array(x2).transpose()
-    # print '\n The added pure-predictions of the CNN:'
-    # print x1
+    # print '\n The added pure-predictions of the CNN:')
+    # print(str(x1))
 
-    # print '\n The percent-wise distribution of the model predictions:'
-    # print x2
+    # print('\n The percent-wise distribution of the model predictions:')
+    # print(str(x2))
 
     return x1, x2
 
@@ -44,10 +44,10 @@ def bernoulli_cm2(sr, a1):
     x2 = np.vstack(np.array([x[0] / len(sr), x[1] / len(a1)]))
     # x2 = np.array(x2).transpose()
 
-    print '\n The Bernoulli distribution:'
-    print x1
-    print '\n The percent-wise Bernoulli distribution:'
-    print x2
+    print('\n The Bernoulli distribution:')
+    print(str(x1))
+    print('\n The percent-wise Bernoulli distribution:')
+    print(str(x2))
 
     return x1, x2
 
@@ -69,11 +69,11 @@ def gradient_cm3(sr, a1, p):
 
     x2 = x / np.sum(x, 1).reshape((3, 1))
     x2 = np.array(x2).transpose()
-    # print '\n The added pure-predictions of the CNN:'
-    # print x1
+    # print('\n The added pure-predictions of the CNN:')
+    # print(str(x1))
 
-    print '\n The percent-wise distribution of the model predictions:'
-    print x2
+    print('\n The percent-wise distribution of the model predictions:')
+    print(str(x2))
 
     return x, x2
 
@@ -94,11 +94,11 @@ def bernoulli_cm3(sr, a1, p):
 
     x2 = x / np.sum(x, 1).reshape((3, 1))
     x2 = np.array(x2).transpose()
-    # print '\n pure Bernoulli distribution:'
-    # print x1
+    # print('\n pure Bernoulli distribution:')
+    # print(str(x1))
 
-    print '\n The percent-wise Bernoulli distribution:'
-    print x2
+    print('\n The percent-wise Bernoulli distribution:')
+    print(str(x2))
 
     return x, x2
 
@@ -119,11 +119,11 @@ def gradient_cm2_binary(sr, a1):
     x1 = np.vstack(np.array([x[0], x[1]]))
     x2 = np.vstack(np.array([x[0] / len(sr), x[1] / len(a1)]))
     # x2 = np.array(x2).transpose()
-    # print '\n The added pure-predictions of the CNN:'
-    # print x1
+    # print('\n The added pure-predictions of the CNN:')
+    # print(str(x1))
 
-    print '\n The percent-wise distribution of the model predictions:'
-    print x2
+    print('\n The percent-wise distribution of the model predictions:')
+    print(str(x2))
 
     return x1, x2
 
@@ -144,9 +144,9 @@ def bernoulli_cm2_binary(sr, a1):
     x2 = np.vstack(np.array([x[0] / len(sr), x[1] / len(a1)]))
     # x2 = np.array(x2).transpose()
 
-    print '\n Validation confusion matrix:'
-    print x1
-    print '\n Validation accuracy in percent:'
-    print x2
+    print('\n Validation confusion matrix:')
+    print(str(x1))
+    print('\n Validation accuracy in percent:')
+    print(str(x2))
 
     return x1, x2

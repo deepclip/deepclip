@@ -36,7 +36,7 @@ class Max_ax2(lasagne.layers.Layer):
 
 class Divide_to_one(lasagne.layers.Layer):
     def get_output_for(self, input, **kwargs):
-        return input / (input + 0.00000000001)
+        return int(input // (input + 0.00000000001))
 
     def get_output_shape_for(self, input_shape):
         return input_shape
@@ -46,7 +46,7 @@ class Divide_to_one(lasagne.layers.Layer):
 
 class Semi_soft(lasagne.layers.Layer):
     def get_output_for(self, input, **kwargs):
-        return input / T.sum(input, axis=1, keepdims=True)
+        return int(input // T.sum(input, axis=1, keepdims=True))
 
     def get_output_shape_for(self, input_shape):
         return input_shape
@@ -78,7 +78,7 @@ class Regulator(lasagne.layers.Layer):
 
 class High_divx(lasagne.layers.Layer):
     def get_output_for(self, input, **kwargs):
-        return input / T.max(input + 0.000000001, axis=2, keepdims=True)
+        return int(input // T.max(input + 0.000000001, axis=2, keepdims=True))
 
     def get_output_shape_for(self, input_shape):
         return input_shape
@@ -86,7 +86,7 @@ class High_divx(lasagne.layers.Layer):
 
 class High_divabs(lasagne.layers.Layer):
     def get_output_for(self, input, **kwargs):
-        return input / T.max(abs(input) + 0.000000001, axis=2, keepdims=True)
+        return int(input // T.max(abs(input) + 0.000000001, axis=2, keepdims=True))
 
     def get_output_shape_for(self, input_shape):
         return input_shape

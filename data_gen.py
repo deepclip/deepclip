@@ -64,12 +64,12 @@ def onehot_binary(input_a, input_b, freq, vocab):
     X_out = []
     for input in inputs:
         x = np.zeros((len(input), len(VOCAB)))
-        for i in xrange(len(input)):
+        for i in range(len(input)):
 
 	    #if input[i].lower() in vocab:
 	    #	x[i][vocab.index(input[i])] += freq[vocab.index(input[i])] #vals[vocab.index(input[i])] #vals[vocab.index(input[i])] #1 - freq[vocab.index(input[i])]
 
-            for j in xrange(len(vocab)):
+            for j in range(len(vocab)):
                 if input[i].lower() in vocab[j].lower():
                     x[i][j] = 1
         X_out.append(x.flatten())
@@ -98,11 +98,11 @@ def onehot_encode(inputs, freq, vocab):
     X_out = []
     for input in inputs:
         x = np.zeros((len(input), len(VOCAB)))
-        for i in xrange(len(input)):
+        for i in range(len(input)):
 	    #if input[i].lower() in vocab:
             #    x[i][vocab.index(input[i])] += freq[vocab.index(input[i])] #vals[vocab.index(input[i])] #vals[vocab.index(input[i])] #1 - freq[vocab.index(input[i])]
 
-   	    for j in xrange(len(vocab)):
+            for j in range(len(vocab)):
                 if input[i].lower() in vocab[j].lower():
                     x[i][j] = 1
 
