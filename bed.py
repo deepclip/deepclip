@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from Bio import SeqIO
 from Bio.Seq import Seq
-#from Bio.Alphabet import generic_dna
+if sys.version_info[0] < 3:
+    from Bio.Alphabet import generic_dna
 import HTSeq
 import argparse
 import random
@@ -234,10 +235,16 @@ def produce_sequences(bed_file, fasta_file, gtf_file, min_length, max_length, wi
                     invalid += 1
                 if valid:
                     neg_peaks[neg_peak] += 1
-                    pos_seq = Seq(str(genome[peak.iv.chrom][peak.iv.start:peak.iv.end].seq), generic_dna)
+                    if sys.version_info[0] < 3:
+                        pos_seq = Seq(str(genome[peak.iv.chrom][peak.iv.start:peak.iv.end].seq), generic_dna)
+                    else:
+                        pos_seq = Seq(str(genome[peak.iv.chrom][peak.iv.start:peak.iv.end].seq))
                     if peak.iv.strand == "-":
                         pos_seq = pos_seq.reverse_complement()
-                    neg_seq = Seq(str(genome[neg_peak.chrom][neg_peak.start:neg_peak.end].seq), generic_dna)
+                    if sys.version_info[0] < 3:
+                        neg_seq = Seq(str(genome[neg_peak.chrom][neg_peak.start:neg_peak.end].seq), generic_dna)
+                    else:
+                        neg_seq = Seq(str(genome[neg_peak.chrom][neg_peak.start:neg_peak.end].seq))
                     if neg_peak.strand == "-":
                         neg_seq = neg_seq.reverse_complement()
                     pos_seq = str(pos_seq)
