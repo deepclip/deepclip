@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 from Bio import SeqIO
 from Bio.Seq import Seq
 if sys.version_info[0] < 3:
@@ -6,7 +7,6 @@ if sys.version_info[0] < 3:
 import HTSeq
 import argparse
 import random
-import sys
 
 def parse_arguments():
     VERSION = "0.7.0"
