@@ -111,6 +111,15 @@ To enable saving of CNN filter data during training, set the '--predict_PFM_file
 ```shell
 DeepCLIP.py --runmode train --predict_PFM_file pfms.json -n MODEL -P MODEL_PREDICTION_FUNCTION --sequences POSITIVES.FASTA --background_sequences NEGATIVES.FASTA
 ```
+The pseudo-PFM data can also be generated from a previously trained model by running in 'predict' runmode with the same options.
+```shell
+DeepCLIP.py --runmode predict --predict_PFM_file pfms.json -P MODEL_PREDICTION_FUNCTION --sequences POSITIVES.FASTA --background_sequences NEGATIVES.FASTA
+```
+The default mode of this will produce the pseudo-PFM data based on the top-1000 scoring sequences, but alternatively the top 50% scoring sequences can be used instead with the '--PFM_on_half' option.
+```shell
+DeepCLIP.py --runmode predict --PFM_on_half --predict_PFM_file pfms.json -P MODEL_PREDICTION_FUNCTION --sequences POSITIVES.FASTA --background_sequences NEGATIVES.FASTA
+```
+
 The "pfms.json" file can then be processed in R:
 ```r
 library(jsonlite)
